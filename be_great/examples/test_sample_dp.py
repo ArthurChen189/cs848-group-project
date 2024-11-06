@@ -12,7 +12,7 @@ from sklearn import datasets
 
 logger = set_logging_level(logging.INFO)
 
-great = GReaT.load_from_dir("iris_base")
+great = GReaT.load_from_dir("iris_dp")
 
 # Continuous column as start
 # data, target = datasets.load_iris(return_X_y=True)
@@ -28,4 +28,4 @@ samples = great.sample(
 )
 
 print(samples)
-samples.to_csv("iris_samples.csv")
+samples.to_csv("iris_samples_dp.csv")
