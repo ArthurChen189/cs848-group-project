@@ -32,6 +32,7 @@ class DPLLMTGenTrainer(dp_transformers.dp_utils.OpacusDPTrainer):
             return self.dp_train_dataloader
 
 
+    # """
     def compute_loss(self, model, inputs, return_outputs = False, num_items_in_batch = None):
         input_ids = inputs.get("input_ids")
         outputs = model(input_ids)
@@ -61,43 +62,45 @@ class DPLLMTGenTrainer(dp_transformers.dp_utils.OpacusDPTrainer):
         loss_format_token_bitmap = input_format_token_idx[...,1:]
         wce_losses[loss_format_token_bitmap] *= (1 - self.alpha)
         wce_losses[~loss_format_token_bitmap] *= self.alpha
-        wce_losses = wce_losses.sum(axis=1)
+        wce_losses = wce_losses.mean(axis=1)
         # print(wce_losses)
         # return wce_loss
 
         # Find Numerical Understanding Loss
-        highest_prob_predictions = torch.argmax(shift_logits, dim=-1)
+        # highest_prob_predictions = torch.argmax(shift_logits, dim=-1)
 
         
-        label_num_token_idx = self._find_tokens(shift_labels, self.numerical_token_ids)
-        pred_num_token_idx = self._find_tokens(highest_prob_predictions, self.numerical_token_ids)
+        # label_num_token_idx = self._find_tokens(shift_labels, self.numerical_token_ids)
+        # pred_num_token_idx = self._find_tokens(highest_prob_predictions, self.numerical_token_ids)
 
-        nu_losses = torch.zeros(batch_size, device=input_ids.device)
-        for sample in range(batch_size):
-            # print("***")
-            # print((shift_labels[sample])[label_num_token_idx[sample]])
-            # print((highest_prob_predictions[sample])[pred_num_token_idx[sample]])
-            label_num_strs = self.processing_class.decode((shift_labels[sample])[label_num_token_idx[sample]]).strip().split(" ")
-            pred_num_strs = self.processing_class.decode((highest_prob_predictions[sample])[pred_num_token_idx[sample]]).strip().split(" ")
-            # print(label_num_strs)
-            # print(pred_num_strs)
-            diffs = []
-            failed_count = abs(len(label_num_strs) - len(pred_num_strs))
-            for label_num_str, pred_num_str in zip(label_num_strs, pred_num_strs):
-                label_num = decode_str_to_num(label_num_str)
-                pred_num = decode_str_to_num(pred_num_str)
-                if label_num and pred_num:
-                    diffs.append(label_num - pred_num)
-                else:
-                    failed_count += 1
-            diffs = np.array(diffs)
-            sqrd_errors = 0.5 * (diffs / self.lmbda) ** 2
-            sample_nu_loss = sqrd_errors.sum() + failed_count
-            nu_losses[sample] = sample_nu_loss
+        # nu_losses = torch.zeros(batch_size, device=input_ids.device)
+        # for sample in range(batch_size):
+        #     # print("***")
+        #     # print((shift_labels[sample])[label_num_token_idx[sample]])
+        #     # print((highest_prob_predictions[sample])[pred_num_token_idx[sample]])
+        #     label_num_strs = self.processing_class.decode((shift_labels[sample])[label_num_token_idx[sample]]).strip().split(" ")
+        #     pred_num_strs = self.processing_class.decode((highest_prob_predictions[sample])[pred_num_token_idx[sample]]).strip().split(" ")
+        #     # print(label_num_strs)
+        #     # print(pred_num_strs)
+        #     diffs = []
+        #     failed_count = abs(len(label_num_strs) - len(pred_num_strs))
+        #     for label_num_str, pred_num_str in zip(label_num_strs, pred_num_strs):
+        #         label_num = decode_str_to_num(label_num_str)
+        #         pred_num = decode_str_to_num(pred_num_str)
+        #         if label_num and pred_num:
+        #             diffs.append(label_num - pred_num)
+        #         else:
+        #             failed_count += 1
+        #     diffs = np.array(diffs)
+        #     sqrd_errors = 0.5 * (diffs / self.lmbda) ** 2
+        #     sample_nu_loss = sqrd_errors.sum() + failed_count
+        #     nu_losses[sample] = sample_nu_loss
         
-        print(f"wce_losses: {wce_losses.mean()} nu_losses {nu_losses.mean()}")
-        return (wce_losses + self.beta * nu_losses).mean()
-
+        # # print(f"wce_losses: {wce_losses.mean()} nu_losses {nu_losses.mean()}")
+        # loss = (wce_losses + self.beta * nu_losses).mean()
+        loss = wce_losses.mean()
+        return loss
+    # """
 
     def _find_tokens(self, input_ids, token_list: List[torch.tensor]):
         # print(input_ids.size())
