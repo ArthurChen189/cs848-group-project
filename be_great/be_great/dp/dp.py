@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 # from opacus import PrivacyEngine
 import torch
+from be_great.dp_basic import DPBasic
 from be_great.dp.dp_collator import DataCollatorDPLLMTGen
 from be_great.dp.dp_trainer import DPLLMTGenTrainer
 from be_great.great import GReaT
@@ -16,7 +17,7 @@ from dp_transformers.arguments import PrivacyArguments
 
 
 
-class DPLLMTGen(GReaT):
+class DPLLMTGen(DPBasic):
 
     def __init__(
         self,
@@ -25,10 +26,16 @@ class DPLLMTGen(GReaT):
         epochs: int = 100, # No longer used
         batch_size: int = 8,
         efficient_finetuning: str = "",
-        stage1_epochs: int = 10,
-        stage2_epochs: int = 4,
-        stage1_lr: float=1e-4,
-        stage2_lr: float=5e-4,
+        per_sample_max_grad_norm=1., 
+        target_epsilon=1.,
+        # stage1_epochs: int = 10,
+        # stage2_epochs: int = 4,
+        stage1_epochs: int = 800,
+        stage2_epochs: int = 200,
+        stage1_lr: float=5e-5,
+        stage2_lr: float=2.5e-5,
+        # stage1_lr: float=1e-4,
+        # stage2_lr: float=5e-4,
         loss_alpha: float = 0.65,
         loss_beta: float = 0.5,
         loss_lmbda: float = 1,
@@ -43,7 +50,7 @@ class DPLLMTGen(GReaT):
         self.loss_beta = loss_beta
         self.loss_lmbda = loss_lmbda
         self.device = device
-        super().__init__(llm, experiment_dir, epochs, batch_size, efficient_finetuning, **train_kwargs)
+        super().__init__(llm, experiment_dir, epochs, batch_size, efficient_finetuning, per_sample_max_grad_norm=per_sample_max_grad_norm, target_epsilon=target_epsilon, **train_kwargs)
 
 
     def fit(
@@ -155,7 +162,10 @@ class DPLLMTGen(GReaT):
             train_dataset=great_ds,
             tokenizer=self.tokenizer,
             data_collator=data_collator,
-            privacy_args=PrivacyArguments(per_sample_max_grad_norm=1.0, target_epsilon=10.),
+            privacy_args=PrivacyArguments(
+                per_sample_max_grad_norm=self.per_sample_max_grad_norm, 
+                target_epsilon=self.target_epsilon
+                ),
         )
 
         try:

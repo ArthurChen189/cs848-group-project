@@ -67,69 +67,13 @@ class DPBasic(GReaT):
         epochs: int = 100,
         batch_size: int = 8,
         efficient_finetuning: str = "",
+        per_sample_max_grad_norm=1., 
+        target_epsilon=1., 
         **train_kwargs,
     ):
-        """Initializes GReaT.
-
-        Args:
-            llm: HuggingFace checkpoint of a pretrained large language model, used a basis of our model
-            experiment_dir:  Directory, where the training checkpoints will be saved
-            epochs: Number of epochs to fine-tune the model
-            batch_size: Batch size used for fine-tuning
-            efficient_finetuning: Indication of fune-tuning method
-            train_kwargs: Additional hyperparameters added to the TrainingArguments used by the HuggingFaceLibrary,
-             see here the full list of all possible values
-             https://huggingface.co/docs/transformers/main/en/main_classes/trainer#transformers.TrainingArguments
-        """
-        # Load Model and Tokenizer from HuggingFace
-        self.efficient_finetuning = efficient_finetuning
-        self.llm = llm
-        self.tokenizer = AutoTokenizer.from_pretrained(self.llm)
-        self.tokenizer.pad_token = self.tokenizer.eos_token
-        self.model = AutoModelForCausalLM.from_pretrained(self.llm)
-
-        if self.efficient_finetuning == "lora":
-            # Lazy importing
-            try:
-                from peft import (
-                    LoraConfig,
-                    get_peft_model,
-                    prepare_model_for_int8_training,
-                    TaskType,
-                )
-            except ImportError:
-                raise ImportError(
-                    "This function requires the 'peft' package. Please install it with - pip install peft==0.9.0"
-                )
-
-            # Define LoRA Config
-            lora_config = LoraConfig(
-                r=16,  # only training 0.16% of the parameters of the model
-                lora_alpha=32,
-                target_modules=[
-                    "c_attn"
-                ],  # this is specific for gpt2 model, to be adapted
-                lora_dropout=0.05,
-                bias="none",
-                task_type=TaskType.CAUSAL_LM,  # this is specific for gpt2 model, to be adapted
-            )
-            # prepare int-8 model for training
-            self.model = prepare_model_for_int8_training(self.model)
-            # add LoRA adaptor
-            self.model = get_peft_model(self.model, lora_config)
-            self.model.print_trainable_parameters()
-
-        # Set the training hyperparameters
-        self.experiment_dir = experiment_dir
-        self.epochs = epochs
-        self.batch_size = batch_size
-        self.train_hyperparameters = train_kwargs
-
-        # Needed for the sampling process
-        self.columns = None
-        self.num_cols = None
-        self.conditional_col = None
-        self.conditional_col_dist = None
+        self.per_sample_max_grad_norm = per_sample_max_grad_norm
+        self.target_epsilon = target_epsilon
+        super().__init__(llm, experiment_dir, epochs, batch_size, efficient_finetuning, **train_kwargs)
 
     def fit(
         self,
@@ -180,14 +124,11 @@ class DPBasic(GReaT):
             tokenizer=self.tokenizer,
             data_collator=data_collator,
             privacy_args=PrivacyArguments(
-                per_sample_max_grad_norm=1., 
-                target_epsilon=10, 
+                per_sample_max_grad_norm=self.per_sample_max_grad_norm, 
+                target_epsilon=self.target_epsilon, 
                 # disable_dp=True
                 ),
         )
-
-        great_trainer.train()
-        return great_trainer
 
         # Start training
         logging.info("Start training...")
