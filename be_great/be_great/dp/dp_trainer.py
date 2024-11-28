@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List, Union
 import dp_transformers
 import numpy as np
 import torch
@@ -30,6 +30,9 @@ class DPLLMTGenTrainer(dp_transformers.dp_utils.OpacusDPTrainer):
             return super().get_train_dataloader()
         else:
             return self.dp_train_dataloader
+    
+    def training_step(self, model: torch.nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]], num_items_in_batch=None) -> torch.Tensor:
+        return super().training_step(model, inputs)
 
 
     # """

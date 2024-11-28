@@ -170,8 +170,7 @@ class DPBasic(GReaT):
             remove_unused_columns=False,
             **self.train_hyperparameters,
         )
-        # data_collator = DataCollatorDPLLMTGen(self.tokenizer) 
-        data_collator = dp_transformers.DataCollatorForPrivateCausalLanguageModeling(self.tokenizer) 
+        data_collator = DataCollatorDPLLMTGen(self.tokenizer) 
 
 
         great_trainer = DPBasicTrainer(
@@ -181,7 +180,7 @@ class DPBasic(GReaT):
             tokenizer=self.tokenizer,
             data_collator=data_collator,
             privacy_args=PrivacyArguments(
-                per_sample_max_grad_norm=10., 
+                per_sample_max_grad_norm=1., 
                 target_epsilon=10, 
                 # disable_dp=True
                 ),

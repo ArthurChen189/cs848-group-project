@@ -1,12 +1,11 @@
 import decimal
 import logging
 import typing as tp
-import dp_transformers
 import numpy as np
 import pandas as pd
 # from opacus import PrivacyEngine
 import torch
-import transformers
+from be_great.dp.dp_collator import DataCollatorDPLLMTGen
 from be_great.dp.dp_trainer import DPLLMTGenTrainer
 from be_great.great import GReaT
 from be_great.great_dataset import GReaTDataCollator, GReaTDataset
@@ -143,7 +142,7 @@ class DPLLMTGen(GReaT):
         numerical_token_ids.append(torch.tensor(self.tokenizer.encode("."), device=self.device))
 
         # Create a trainer first to get the default optimzer and dataloader
-        data_collator = dp_transformers.DataCollatorForPrivateCausalLanguageModeling(self.tokenizer) 
+        data_collator = DataCollatorDPLLMTGen(self.tokenizer) 
         # TODO configure privacy args
         trainer = DPLLMTGenTrainer(
             format_token_ids,
@@ -156,7 +155,7 @@ class DPLLMTGen(GReaT):
             train_dataset=great_ds,
             tokenizer=self.tokenizer,
             data_collator=data_collator,
-            privacy_args=PrivacyArguments(per_sample_max_grad_norm=1.0, target_epsilon=3),
+            privacy_args=PrivacyArguments(per_sample_max_grad_norm=1.0, target_epsilon=10.),
         )
 
         try:
@@ -168,6 +167,7 @@ class DPLLMTGen(GReaT):
                 "final_epsilon_prv": eps_prv,
                 "final_epsilon_rdp": eps_rdp
             })
+            return trainer
 
         # # define your components as usual
         # model = self.model
