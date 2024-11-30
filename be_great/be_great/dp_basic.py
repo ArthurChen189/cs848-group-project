@@ -1,40 +1,18 @@
-from math import inf
-import warnings
-import json
 import typing as tp
 import logging
 
-import dp_transformers
-import fsspec
 import numpy as np
 import pandas as pd
 
-from tqdm import tqdm
+from transformers import  TrainingArguments
 
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
-
-from be_great.dp import dp_collator
 from be_great.dp.dp_collator import DataCollatorDPLLMTGen
 from be_great.dp_basic_trainer import DPBasicTrainer
 from dp_transformers.arguments import PrivacyArguments
 from be_great.great import GReaT
-from be_great.great_dataset import GReaTDataset, GReaTDataCollator
-from be_great.great_start import (
-    GReaTStart,
-    CategoricalStart,
-    ContinuousStart,
-    RandomStart,
-    _pad_tokens,
-)
-from be_great.great_trainer import GReaTTrainer
+from be_great.great_dataset import GReaTDataset
 from be_great.great_utils import (
     _array_to_dataframe,
-    _get_column_distribution,
-    _convert_tokens_to_text,
-    _convert_text_to_tabular_data,
-    _partial_df_to_promts,
-    bcolors,
 )
 
 
@@ -69,11 +47,27 @@ class DPBasic(GReaT):
         efficient_finetuning: str = "",
         per_sample_max_grad_norm=1., 
         target_epsilon=1., 
+        noise_multiplier=None,
         **train_kwargs,
     ):
         self.per_sample_max_grad_norm = per_sample_max_grad_norm
         self.target_epsilon = target_epsilon
+        self.noise_multiplier = noise_multiplier
         super().__init__(llm, experiment_dir, epochs, batch_size, efficient_finetuning, **train_kwargs)
+
+    @property
+    def privacy_args(self) -> PrivacyArguments:
+        """
+        Returns privacy arguments
+        """
+        if self.noise_multiplier:
+            self.target_epsilon = None
+        return PrivacyArguments(
+                per_sample_max_grad_norm=self.per_sample_max_grad_norm, 
+                target_epsilon=self.target_epsilon, 
+                noise_multiplier=self.noise_multiplier,
+                # disable_dp=True
+                ),
 
     def fit(
         self,
@@ -123,11 +117,7 @@ class DPBasic(GReaT):
             train_dataset=great_ds,
             tokenizer=self.tokenizer,
             data_collator=data_collator,
-            privacy_args=PrivacyArguments(
-                per_sample_max_grad_norm=self.per_sample_max_grad_norm, 
-                target_epsilon=self.target_epsilon, 
-                # disable_dp=True
-                ),
+            privacy_args=self.privacy_args,
         )
 
         # Start training

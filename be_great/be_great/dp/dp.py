@@ -3,8 +3,9 @@ import logging
 import typing as tp
 import numpy as np
 import pandas as pd
-# from opacus import PrivacyEngine
 import torch
+from be_great.dp.no_dp_trainer import DPLLMTGenTrainerNoDP
+from be_great.dp_basic_trainer import DPBasicTrainer
 from be_great.dp_basic import DPBasic
 from be_great.dp.dp_collator import DataCollatorDPLLMTGen
 from be_great.dp.dp_trainer import DPLLMTGenTrainer
@@ -13,7 +14,6 @@ from be_great.great_dataset import GReaTDataCollator, GReaTDataset
 from be_great.great_trainer import GReaTTrainer
 from be_great.great_utils import _array_to_dataframe
 from transformers import TrainingArguments
-from dp_transformers.arguments import PrivacyArguments
 
 
 
@@ -28,16 +28,13 @@ class DPLLMTGen(DPBasic):
         efficient_finetuning: str = "",
         per_sample_max_grad_norm=1., 
         target_epsilon=1.,
-        # stage1_epochs: int = 10,
-        # stage2_epochs: int = 4,
-        stage1_epochs: int = 800,
-        stage2_epochs: int = 200,
+        noise_multiplier=None,
+        stage1_epochs: int = 600,
+        stage2_epochs: int = 400,
         stage1_lr: float=5e-5,
         stage2_lr: float=2.5e-5,
-        # stage1_lr: float=1e-4,
-        # stage2_lr: float=5e-4,
         loss_alpha: float = 0.65,
-        loss_beta: float = 0.5,
+        loss_beta: float = 0.1,
         loss_lmbda: float = 1,
         device: str = "cuda",
         **train_kwargs,
@@ -50,7 +47,7 @@ class DPLLMTGen(DPBasic):
         self.loss_beta = loss_beta
         self.loss_lmbda = loss_lmbda
         self.device = device
-        super().__init__(llm, experiment_dir, epochs, batch_size, efficient_finetuning, per_sample_max_grad_norm=per_sample_max_grad_norm, target_epsilon=target_epsilon, **train_kwargs)
+        super().__init__(llm, experiment_dir, epochs, batch_size, efficient_finetuning, per_sample_max_grad_norm=per_sample_max_grad_norm, target_epsilon=target_epsilon, noise_multiplier=noise_multiplier, **train_kwargs)
 
 
     def fit(
@@ -150,7 +147,6 @@ class DPLLMTGen(DPBasic):
 
         # Create a trainer first to get the default optimzer and dataloader
         data_collator = DataCollatorDPLLMTGen(self.tokenizer) 
-        # TODO configure privacy args
         trainer = DPLLMTGenTrainer(
             format_token_ids,
             numerical_token_ids,
@@ -162,22 +158,29 @@ class DPLLMTGen(DPBasic):
             train_dataset=great_ds,
             tokenizer=self.tokenizer,
             data_collator=data_collator,
-            privacy_args=PrivacyArguments(
-                per_sample_max_grad_norm=self.per_sample_max_grad_norm, 
-                target_epsilon=self.target_epsilon
-                ),
+            privacy_args=self.privacy_args
         )
+        # trainer = DPLLMTGenTrainerNoDP(
+        #     format_token_ids,
+        #     numerical_token_ids,
+        #     alpha=self.loss_alpha,
+        #     beta=self.loss_beta,
+        #     lmbda=self.loss_lmbda,
+        #     model=self.model,
+        #     args=training_args,
+        #     train_dataset=great_ds,
+        #     tokenizer=self.tokenizer,
+        #     data_collator=data_collator,
+        # )
 
-        try:
-            trainer.train()
-        finally:
-            eps_prv = trainer.get_prv_epsilon()
-            eps_rdp = trainer.get_rdp_epsilon()
-            trainer.log({
-                "final_epsilon_prv": eps_prv,
-                "final_epsilon_rdp": eps_rdp
-            })
-            return trainer
+        trainer.train()
+        eps_prv = trainer.get_prv_epsilon()
+        eps_rdp = trainer.get_rdp_epsilon()
+        trainer.log({
+            "final_epsilon_prv": eps_prv,
+            "final_epsilon_rdp": eps_rdp
+        })
+        return trainer
 
         # # define your components as usual
         # model = self.model

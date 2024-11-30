@@ -1,10 +1,12 @@
 from typing import Any, Dict, List, Union
-import dp_transformers
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+from be_great.great_trainer import GReaTTrainer
+from be_great.custom_dp_optimizer import CustomDPOptimizer
+from transformers import Trainer
 
-class DPLLMTGenTrainer(dp_transformers.dp_utils.OpacusDPTrainer):
+class DPLLMTGenTrainerNoDP(Trainer):
     def __init__(
             self, 
             format_token_ids, 
@@ -22,20 +24,7 @@ class DPLLMTGenTrainer(dp_transformers.dp_utils.OpacusDPTrainer):
         self.beta = beta
         self.lmbda = lmbda
 
-        self.dp_train_dataloader = None
-
-    def get_train_dataloader(self) -> DataLoader:
-        return super().get_train_dataloader()
-        if self.dp_train_dataloader is None:
-            return super().get_train_dataloader()
-        else:
-            return self.dp_train_dataloader
-    
-    def training_step(self, model: torch.nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]], num_items_in_batch=None) -> torch.Tensor:
-        return super().training_step(model, inputs)
-
-
-    
+    # """
     def compute_loss(self, model, inputs, return_outputs = False, num_items_in_batch = None):
         # loss = super().compute_loss(model, inputs)
         # print(loss)
@@ -117,7 +106,7 @@ class DPLLMTGenTrainer(dp_transformers.dp_utils.OpacusDPTrainer):
         # print(f"loss: {loss} wce_losses: {wce_losses.mean()} nu_losses {self.beta * nu_losses.mean()}")
         # loss = wce_losses.mean()
         return loss
-    
+    # """
 
     def _find_tokens(self, input_ids, token_list: List[torch.tensor]):
         # print(input_ids.size())
