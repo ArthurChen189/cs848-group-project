@@ -6,6 +6,61 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import  LabelEncoder, MinMaxScaler
 from sklearn.svm import SVC
+import numpy as np
+
+def evaluate_mle(data, categorical_cols=None):
+    """
+    Calculate Machine Learning Evaluation (MLE) score using both classification and regression tasks
+    """
+    if categorical_cols is None:
+        categorical_cols = []
+    
+    # Prepare features for both tasks
+    X = data.copy()
+    
+    # Classification task (income prediction)
+    y_class = X.pop('income')
+    le = LabelEncoder()
+    y_class = le.fit_transform(y_class)
+    
+    # Regression task (age prediction)
+    y_reg = X.pop('age')
+    
+    # One-hot encode remaining categorical features
+    X = pd.get_dummies(X, columns=[col for col in categorical_cols if col not in ['income', 'age']])
+    
+    # Split data
+    X_train, X_test, y_class_train, y_class_test, y_reg_train, y_reg_test = train_test_split(
+        X, y_class, y_reg, test_size=0.2, random_state=42
+    )
+    
+    # Classification model
+    clf = RandomForestClassifier(
+        n_estimators=100,
+        max_depth=10,
+        min_samples_split=5,
+        n_jobs=-1,
+        random_state=42
+    )
+    clf.fit(X_train, y_class_train)
+    y_class_pred = clf.predict(X_test)
+    f1 = f1_score(y_class_test, y_class_pred, average='macro')
+    
+    # Regression model
+    reg = LinearRegression()
+    reg.fit(X_train, y_reg_train)
+    y_reg_pred = reg.predict(X_test)
+    r2 = r2_score(y_reg_test, y_reg_pred)
+    
+    # Calculate MLE score as average of F1 and R²
+    mle_score = (f1 + r2) / 2
+    
+    print(f"\nResults:")
+    print(f"F1 Score: {f1:.4f}")
+    print(f"R² Score: {r2:.4f}")
+    print(f"MLE Score: {mle_score:.4f}")
+    
+    return mle_score
 
 def evaluate_synthetic_data(private_data, synthetic_data, target_col, categorical_cols=None, is_categorical_target=False):
     """
