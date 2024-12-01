@@ -10,169 +10,98 @@ import numpy as np
 
 def evaluate_mle(data, categorical_cols=None):
     """
-    Calculate Machine Learning Evaluation (MLE) score using both classification and regression tasks
+    General MLE score calculation for any dataset
     """
     if categorical_cols is None:
         categorical_cols = []
     
-    # Prepare features for both tasks
+    # Prepare features
     X = data.copy()
+    numerical_cols = [col for col in X.columns if col not in categorical_cols]
     
-    # Classification task (income prediction)
-    y_class = X.pop('income')
-    le = LabelEncoder()
-    y_class = le.fit_transform(y_class)
+    # Scale numerical features
+    scaler = MinMaxScaler()
+    if numerical_cols:
+        X[numerical_cols] = scaler.fit_transform(X[numerical_cols])
     
-    # Regression task (age prediction)
-    y_reg = X.pop('age')
+    f1_scores = []
+    r2_scores = []
     
-    # One-hot encode remaining categorical features
-    X = pd.get_dummies(X, columns=[col for col in categorical_cols if col not in ['income', 'age']])
+    # Classification tasks for categorical columns
+    for target_col in categorical_cols:
+        # Prepare features
+        features = X.drop(columns=[target_col])
+        
+        # One-hot encode remaining categorical features
+        cat_cols = [col for col in categorical_cols if col != target_col]
+        if cat_cols:
+            features = pd.get_dummies(features, columns=cat_cols)
+        
+        # Encode target
+        le = LabelEncoder()
+        y = le.fit_transform(X[target_col])
+        
+        # Split data
+        split_idx = int(0.8 * len(features))
+        X_train, X_test = features.iloc[:split_idx], features.iloc[split_idx:]
+        y_train, y_test = y[:split_idx], y[split_idx:]
+        
+        # Scale numerical features after split
+        if numerical_cols:
+            scaler = MinMaxScaler()
+            num_cols = [col for col in numerical_cols if col in X_train.columns]
+            if num_cols:
+                X_train[num_cols] = scaler.fit_transform(X_train[num_cols])
+                X_test[num_cols] = scaler.transform(X_test[num_cols])
+        
+        # Train classifier
+        model = RandomForestClassifier(
+            n_estimators=100,  
+            max_depth=None,    
+            n_jobs=-1
+        )
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        f1_scores.append(f1_score(y_test, y_pred, average='macro'))
     
-    # Split data
-    X_train, X_test, y_class_train, y_class_test, y_reg_train, y_reg_test = train_test_split(
-        X, y_class, y_reg, test_size=0.2, random_state=42
-    )
+    # Regression tasks for numerical columns
+    for target_col in numerical_cols:
+        # Prepare features
+        features = X.drop(columns=[target_col])
+        
+        # One-hot encode categorical features
+        if categorical_cols:
+            features = pd.get_dummies(features, columns=categorical_cols)
+        
+        y = X[target_col].values
+        
+        # Split data
+        split_idx = int(0.8 * len(features))
+        X_train, X_test = features.iloc[:split_idx], features.iloc[split_idx:]
+        y_train, y_test = y[:split_idx], y[split_idx:]
+        
+        # Train regressor
+        model = RandomForestRegressor(
+            n_estimators=100,
+            max_depth=None,
+            min_samples_split=2,
+            n_jobs=-1
+        )
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        r2_scores.append(r2_score(y_test, y_pred))
     
-    # Classification model
-    clf = RandomForestClassifier(
-        n_estimators=100,
-        max_depth=10,
-        min_samples_split=5,
-        n_jobs=-1,
-        random_state=42
-    )
-    clf.fit(X_train, y_class_train)
-    y_class_pred = clf.predict(X_test)
-    f1 = f1_score(y_class_test, y_class_pred, average='macro')
+    # Calculate final scores
+    avg_f1 = np.mean(f1_scores) if f1_scores else 0
+    avg_r2 = np.mean(r2_scores) if r2_scores else 0
+    mle_score = (avg_f1 + avg_r2) / 2
     
-    # Regression model
-    reg = LinearRegression()
-    reg.fit(X_train, y_reg_train)
-    y_reg_pred = reg.predict(X_test)
-    r2 = r2_score(y_reg_test, y_reg_pred)
-    
-    # Calculate MLE score as average of F1 and R²
-    mle_score = (f1 + r2) / 2
-    
-    print(f"\nResults:")
-    print(f"F1 Score: {f1:.4f}")
-    print(f"R² Score: {r2:.4f}")
+    print(f"Average F1 Score ({len(f1_scores)} tasks): {avg_f1:.4f}")
+    print(f"Average R² Score ({len(r2_scores)} tasks): {avg_r2:.4f}")
     print(f"MLE Score: {mle_score:.4f}")
     
     return mle_score
 
-def evaluate_synthetic_data(private_data, synthetic_data, target_col, categorical_cols=None, is_categorical_target=False):
-    """
-    Evaluate synthetic data quality 
-    
-    Parameters:
-    - private_data: original dataset
-    - synthetic_data: generated synthetic dataset
-    - target_col: name of the target column
-    - categorical_cols: list of categorical column names
-    - is_categorical_target: boolean indicating if target is categorical
-    
-    prints the F1 score, R² score, MSE score, and DM score
-    """
-    # Prepare data
-    private_x = private_data.drop(columns=[target_col])
-    private_y = private_data[target_col]
-    synthetic_x = synthetic_data.drop(columns=[target_col])
-    synthetic_y = synthetic_data[target_col]
-    
-    # Handle categorical target
-    if is_categorical_target:
-        le = LabelEncoder()
-        private_y = le.fit_transform(private_y)
-        synthetic_y = le.transform(synthetic_y)
-    
-    # One-hot encode categorical features
-    if categorical_cols:
-        private_x = pd.get_dummies(private_x, columns=categorical_cols)
-        synthetic_x = pd.get_dummies(synthetic_x, columns=categorical_cols)
-        
-        # Align columns
-        all_columns = set(private_x.columns) | set(synthetic_x.columns)
-        for col in all_columns:
-            if col not in private_x.columns:
-                private_x[col] = 0
-            if col not in synthetic_x.columns:
-                synthetic_x[col] = 0
-        private_x = private_x[sorted(all_columns)]
-        synthetic_x = synthetic_x[sorted(all_columns)]
-    
-    # Convert numerical columns to float
-    numerical_cols = private_x.select_dtypes(include=['int64', 'float64']).columns
-    private_x[numerical_cols] = private_x[numerical_cols].astype(float)
-    synthetic_x[numerical_cols] = synthetic_x[numerical_cols].astype(float)
-    
-    # Evaluate classification
-    if is_categorical_target:
-        private_f1, synthetic_f1 = evaluate_classification(private_x, private_y, synthetic_x, synthetic_y)
-        print(f"F1 Score - Private: {private_f1:.4f}, Synthetic: {synthetic_f1:.4f}")
-    
-    # Evaluate regression
-    else:
-        metrics = evaluate_regression(private_x, private_y, synthetic_x, synthetic_y)
-        print(f"R² Score - Private: {metrics['private_r2']:.4f}, Synthetic: {metrics['synthetic_r2']:.4f}")
-        print(f"MSE - Private: {metrics['private_mse']:.4f}, Synthetic: {metrics['synthetic_mse']:.4f}")
-    
-    # Discriminator Measure
-    dm_score = calculate_dm_score(private_x, synthetic_x)
-    print(f"DM Score: {dm_score:.4f} (closer to 0 is better)")
-
-def evaluate_classification(private_x, private_y, synthetic_x, synthetic_y):
-    # Split data
-    X_train, X_test, y_train, y_test = train_test_split(private_x, private_y, test_size=0.2, random_state=42)
-    
-    # Train and evaluate models
-    private_model = SVC()
-    private_model.fit(X_train, y_train)
-    private_f1 = f1_score(y_test, private_model.predict(X_test), average='macro')
-    
-    synthetic_model = SVC()
-    synthetic_model.fit(synthetic_x, synthetic_y)
-    synthetic_f1 = f1_score(y_test, synthetic_model.predict(X_test), average='macro')
-    
-    return private_f1, synthetic_f1
-
-def evaluate_regression(private_x, private_y, synthetic_x, synthetic_y):
-    # Scale features to [0,1] range
-    x_scaler = MinMaxScaler()
-    private_x_scaled = x_scaler.fit_transform(private_x)
-    synthetic_x_scaled = x_scaler.transform(synthetic_x)
-    
-    # Scale target variable to [0,1] range
-    y_scaler = MinMaxScaler()
-    private_y_scaled = y_scaler.fit_transform(private_y.values.reshape(-1, 1)).ravel()
-    synthetic_y_scaled = y_scaler.transform(synthetic_y.values.reshape(-1, 1)).ravel()
-    
-    # Split private data for testing
-    X_train, X_test, y_train, y_test = train_test_split(
-        private_x, private_y, 
-        test_size=0.2, random_state=42
-    )
-    
-    # Train private model
-    private_model = LinearRegression()
-    private_model.fit(X_train, y_train)
-    private_pred = private_model.predict(X_test)
-    
-    # Train synthetic model using all synthetic data
-    synthetic_model = LinearRegression()
-    synthetic_model.fit(synthetic_x, synthetic_y)
-    synthetic_pred = synthetic_model.predict(X_test)
-    
-    # Calculate metrics
-    metrics = {
-        'private_r2': r2_score(y_test, private_pred),
-        'synthetic_r2': r2_score(y_test, synthetic_pred),
-        'private_mse': mean_squared_error(y_test, private_pred),
-        'synthetic_mse': mean_squared_error(y_test, synthetic_pred)
-    }
-    
-    return metrics
 
 def calculate_dm_score(private_x, synthetic_x):
     # Prepare data

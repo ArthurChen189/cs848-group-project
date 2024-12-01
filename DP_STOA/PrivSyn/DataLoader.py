@@ -2,6 +2,7 @@ import json
 import yaml
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
 
 class DataLoader():
     def __init__(self, datapath, configpath, datainfopath, dataschemapath):
@@ -99,6 +100,14 @@ class DataLoader():
         self.private_data.fillna(self.fillna, inplace=True, downcast = self.datatypes)
         # Remove identifier column
         self.private_data = self.remove_identifier(self.config['identifier_list'], self.private_data)
+        
+        # Add normalization for numeric columns BEFORE binning
+        numerical_cols = [col for col in self.private_data.columns 
+                         if self.private_data[col].dtype in ['int64', 'float64']]
+        if numerical_cols:
+            self.scaler = MinMaxScaler()
+            self.private_data[numerical_cols] = self.scaler.fit_transform(self.private_data[numerical_cols])
+        
         # Applying binning to numeric types
         self.private_data = self.binning_attributes(self.config['binning_list'], self.private_data)
         # Applying grouping to attributes (Optional)
