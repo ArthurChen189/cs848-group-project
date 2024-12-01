@@ -36,6 +36,7 @@ class DPLLMTGen(DPBasic):
         loss_alpha: float = 0.65,
         loss_beta: float = 0.1,
         loss_lmbda: float = 1,
+        use_dp: bool = True,
         device: str = "cuda",
         **train_kwargs,
     ):
@@ -46,6 +47,7 @@ class DPLLMTGen(DPBasic):
         self.loss_alpha = loss_alpha
         self.loss_beta = loss_beta
         self.loss_lmbda = loss_lmbda
+        self.use_dp = use_dp
         self.device = device
         super().__init__(llm, experiment_dir, epochs, batch_size, efficient_finetuning, per_sample_max_grad_norm=per_sample_max_grad_norm, target_epsilon=target_epsilon, noise_multiplier=noise_multiplier, **train_kwargs)
 
@@ -147,39 +149,48 @@ class DPLLMTGen(DPBasic):
 
         # Create a trainer first to get the default optimzer and dataloader
         data_collator = DataCollatorDPLLMTGen(self.tokenizer) 
-        trainer = DPLLMTGenTrainer(
-            format_token_ids,
-            numerical_token_ids,
-            alpha=self.loss_alpha,
-            beta=self.loss_beta,
-            lmbda=self.loss_lmbda,
-            model=self.model,
-            args=training_args,
-            train_dataset=great_ds,
-            tokenizer=self.tokenizer,
-            data_collator=data_collator,
-            privacy_args=self.privacy_args
-        )
-        # trainer = DPLLMTGenTrainerNoDP(
-        #     format_token_ids,
-        #     numerical_token_ids,
-        #     alpha=self.loss_alpha,
-        #     beta=self.loss_beta,
-        #     lmbda=self.loss_lmbda,
-        #     model=self.model,
-        #     args=training_args,
-        #     train_dataset=great_ds,
-        #     tokenizer=self.tokenizer,
-        #     data_collator=data_collator,
-        # )
+        if self.use_dp:
+            from dp_transformers.arguments import PrivacyArguments
+            trainer = DPLLMTGenTrainer(
+                format_token_ids,
+                numerical_token_ids,
+                alpha=self.loss_alpha,
+                beta=self.loss_beta,
+                lmbda=self.loss_lmbda,
+                model=self.model,
+                args=training_args,
+                train_dataset=great_ds,
+                tokenizer=self.tokenizer,
+                data_collator=data_collator,
+                privacy_args=PrivacyArguments(
+                    per_sample_max_grad_norm=self.per_sample_max_grad_norm, 
+                    target_epsilon=self.target_epsilon, 
+                    # noise_multiplier=self.noise_multiplier,
+                    # disable_dp=True
+                ),
+            )
+        else:
+            trainer = DPLLMTGenTrainerNoDP(
+                format_token_ids,
+                numerical_token_ids,
+                alpha=self.loss_alpha,
+                beta=self.loss_beta,
+                lmbda=self.loss_lmbda,
+                model=self.model,
+                args=training_args,
+                train_dataset=great_ds,
+                tokenizer=self.tokenizer,
+                data_collator=data_collator,
+            )
 
         trainer.train()
-        eps_prv = trainer.get_prv_epsilon()
-        eps_rdp = trainer.get_rdp_epsilon()
-        trainer.log({
-            "final_epsilon_prv": eps_prv,
-            "final_epsilon_rdp": eps_rdp
-        })
+        if self.use_dp:
+            eps_prv = trainer.get_prv_epsilon()
+            eps_rdp = trainer.get_rdp_epsilon()
+            trainer.log({
+                "final_epsilon_prv": eps_prv,
+                "final_epsilon_rdp": eps_rdp
+            })
         return trainer
 
         # # define your components as usual

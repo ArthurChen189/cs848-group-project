@@ -8,7 +8,6 @@ from torch.utils.data import DataLoader
 
 import opacus
 from transformers import Trainer, training_args
-from be_great.custom_dp_optimizer import CustomDPOptimizer
 import dp_transformers
 
 

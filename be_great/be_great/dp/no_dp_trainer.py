@@ -3,7 +3,6 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from be_great.great_trainer import GReaTTrainer
-from be_great.custom_dp_optimizer import CustomDPOptimizer
 from transformers import Trainer
 
 class DPLLMTGenTrainerNoDP(Trainer):
