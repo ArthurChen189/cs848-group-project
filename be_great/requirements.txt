@@ -7,3 +7,5 @@ tqdm >= 4.64.1
 transformers >= 4.22.1
 accelerate >= 0.20.1
 fsspec >= 2024.5.0
+opacus==1.5.2
+dp-transformers @ git+https://github.com/microsoft/dp-transformers.git@f9fae445b1d3bb28355dbaac6720c007abb974ce
