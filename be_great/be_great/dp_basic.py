@@ -55,19 +55,19 @@ class DPBasic(GReaT):
         self.noise_multiplier = noise_multiplier
         super().__init__(llm, experiment_dir, epochs, batch_size, efficient_finetuning, **train_kwargs)
 
-    @property
-    def privacy_args(self) -> PrivacyArguments:
-        """
-        Returns privacy arguments
-        """
-        if self.noise_multiplier:
-            self.target_epsilon = None
-        return PrivacyArguments(
-                per_sample_max_grad_norm=self.per_sample_max_grad_norm, 
-                target_epsilon=self.target_epsilon, 
-                noise_multiplier=self.noise_multiplier,
-                # disable_dp=True
-                ),
+    # @property
+    # def privacy_args(self) -> PrivacyArguments:
+    #     """
+    #     Returns privacy arguments
+    #     """
+    #     if self.noise_multiplier:
+    #         self.target_epsilon = None
+    #     return PrivacyArguments(
+    #             per_sample_max_grad_norm=self.per_sample_max_grad_norm, 
+    #             target_epsilon=self.target_epsilon, 
+    #             noise_multiplier=self.noise_multiplier,
+    #             # disable_dp=True
+    #             ),
 
     def fit(
         self,
@@ -117,7 +117,12 @@ class DPBasic(GReaT):
             train_dataset=great_ds,
             tokenizer=self.tokenizer,
             data_collator=data_collator,
-            privacy_args=self.privacy_args,
+            privacy_args=PrivacyArguments(
+                per_sample_max_grad_norm=self.per_sample_max_grad_norm, 
+                target_epsilon=self.target_epsilon, 
+                noise_multiplier=self.noise_multiplier,
+                # disable_dp=True
+                ),
         )
 
         # Start training
