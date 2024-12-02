@@ -3,4 +3,5 @@ wandb
 *_base
 *_dp
 *.csv
+*/build/*
 rossmann-data/raw/*.csv

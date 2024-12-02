@@ -2,6 +2,8 @@ LICENSE
 README.md
 pyproject.toml
 be_great/__init__.py
+be_great/dp_basic.py
+be_great/dp_basic_trainer.py
 be_great/great.py
 be_great/great_dataset.py
 be_great/great_start.py
