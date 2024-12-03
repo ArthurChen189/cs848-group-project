@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import torch
 from be_great.dp.no_dp_trainer import DPLLMTGenTrainerNoDP
-from be_great.dp_basic_trainer import DPBasicTrainer
-from be_great.dp_basic import DPBasic
+from be_great.be_great.great_dp_trainer import GReaTDPTrainer
+from be_great.be_great.great_dp import GReaTDP
 from be_great.dp.dp_collator import DataCollatorDPLLMTGen
 from be_great.dp.dp_trainer import DPLLMTGenTrainer
 from be_great.great import GReaT
@@ -17,7 +17,7 @@ from transformers import TrainingArguments
 
 
 
-class DPLLMTGen(DPBasic):
+class DPLLMTGen(GReaTDP):
 
     def __init__(
         self,
