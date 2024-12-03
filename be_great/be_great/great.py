@@ -60,6 +60,7 @@ class GReaT:
         epochs: int = 100,
         batch_size: int = 8,
         efficient_finetuning: str = "",
+        use_8bit_quantization: bool = False,
         **train_kwargs,
     ):
         """Initializes GReaT.
@@ -79,7 +80,24 @@ class GReaT:
         self.llm = llm
         self.tokenizer = AutoTokenizer.from_pretrained(self.llm)
         self.tokenizer.pad_token = self.tokenizer.eos_token
-        self.model = AutoModelForCausalLM.from_pretrained(self.llm)
+        self.use_8bit_quantization = use_8bit_quantization
+
+        if use_8bit_quantization:
+            from transformers import BitsAndBytesConfig
+            bnb_config = BitsAndBytesConfig(
+                load_in_8bit=True,
+                # bnb_4bit_use_double_quant=True,
+                # bnb_4bit_quant_type="nf4",
+                # bnb_4bit_compute_dtype=torch.bfloat16
+            )
+
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.llm, 
+                quantization_config=bnb_config, 
+                attn_implementation="flash_attention_2"
+            )
+        else:
+            self.model = AutoModelForCausalLM.from_pretrained(self.llm)
 
         if self.efficient_finetuning == "lora":
             # Lazy importing
@@ -87,27 +105,53 @@ class GReaT:
                 from peft import (
                     LoraConfig,
                     get_peft_model,
-                    prepare_model_for_int8_training,
+                    prepare_model_for_kbit_training,
                     TaskType,
                 )
             except ImportError:
                 raise ImportError(
-                    "This function requires the 'peft' package. Please install it with - pip install peft==0.9.0"
+                    "This function requires the 'peft' package."
                 )
 
-            # Define LoRA Config
-            lora_config = LoraConfig(
-                r=16,  # only training 0.16% of the parameters of the model
-                lora_alpha=32,
-                target_modules=[
-                    "c_attn"
-                ],  # this is specific for gpt2 model, to be adapted
-                lora_dropout=0.05,
-                bias="none",
-                task_type=TaskType.CAUSAL_LM,  # this is specific for gpt2 model, to be adapted
-            )
+            if "gpt2" in llm.lower():
+                # Define LoRA Config
+                lora_config = LoraConfig(
+                    r=16,  # only training 0.16% of the parameters of the model
+                    lora_alpha=32,
+                    target_modules=[
+                        "c_attn"
+                    ],  # this is specific for gpt2 model, to be adapted
+                    lora_dropout=0.05,
+                    bias="none",
+                    task_type=TaskType.CAUSAL_LM,  # this is specific for gpt2 model, to be adapted
+                )
+            elif "llama" in llm.lower():
+                # From https://www.anyscale.com/blog/fine-tuning-llms-lora-or-full-parameter-an-in-depth-analysis-with-llama-2
+                lora_config = LoraConfig(
+                    r=8,  # dimension of the updated matrices
+                    lora_alpha=16,  # parameter for scaling
+                    lora_dropout=0.05,  # dropout probability for layers
+                    target_modules=[
+                    "q_proj",
+                    "up_proj",
+                    "o_proj",
+                    "k_proj",
+                    "down_proj",
+                    "gate_proj",
+                    "v_proj",
+                    # "embed_tokens",
+                    # "lm_head"
+                    ],
+                    modules_to_save=[],
+                    # bias="none",
+                    task_type="CAUSAL_LM",
+                )
+
+
             # prepare int-8 model for training
-            self.model = prepare_model_for_int8_training(self.model)
+            if self.use_8bit_quantization:
+                self.model = prepare_model_for_kbit_training(self.model)
+
             # add LoRA adaptor
             self.model = get_peft_model(self.model, lora_config)
             self.model.print_trainable_parameters()
