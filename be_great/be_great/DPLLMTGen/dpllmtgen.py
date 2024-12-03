@@ -4,11 +4,11 @@ import typing as tp
 import numpy as np
 import pandas as pd
 import torch
-from be_great.dp.no_dp_trainer import DPLLMTGenTrainerNoDP
-from be_great.be_great.great_dp_trainer import GReaTDPTrainer
-from be_great.be_great.great_dp import GReaTDP
-from be_great.dp.dp_collator import DataCollatorDPLLMTGen
-from be_great.dp.dp_trainer import DPLLMTGenTrainer
+from be_great.DPLLMTGen.dpllmtgen_nodp import DPLLMTGenTrainerNoDP
+from be_great.great_dp_trainer import GReaTDPTrainer
+from be_great.great_dp import GReaTDP
+from be_great.dp_collator import DataCollatorDPLLMTGen
+from be_great.DPLLMTGen.dpllmtgen_trainer import DPLLMTGenTrainer
 from be_great.great import GReaT
 from be_great.great_dataset import GReaTDataCollator, GReaTDataset
 from be_great.great_trainer import GReaTTrainer

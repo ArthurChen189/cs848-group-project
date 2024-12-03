@@ -6,7 +6,7 @@ import pandas as pd
 
 from transformers import  TrainingArguments
 
-from be_great.dp.dp_collator import DataCollatorDPLLMTGen
+from be_great.dp_collator import DataCollatorDPLLMTGen
 from be_great.great_dp_trainer import GReaTDPTrainer
 from dp_transformers.arguments import PrivacyArguments
 from be_great.great import GReaT
