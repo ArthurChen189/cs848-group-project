@@ -47,12 +47,18 @@ class GReaTDP(GReaT):
         efficient_finetuning: str = "",
         per_sample_max_grad_norm=1., 
         target_epsilon=1., 
+        target_delta=None,
         noise_multiplier=None,
+        max_physical_batch_size:tp.Optional[int]=None,
         **train_kwargs,
     ):
-        self.per_sample_max_grad_norm = per_sample_max_grad_norm
-        self.target_epsilon = target_epsilon
-        self.noise_multiplier = noise_multiplier
+        self.privacy_args = PrivacyArguments(
+            per_sample_max_grad_norm=per_sample_max_grad_norm,
+            target_epsilon=target_epsilon if noise_multiplier is None else None,
+            target_delta=target_delta,
+            noise_multiplier=noise_multiplier
+        )
+        self.max_physical_batch_size = max_physical_batch_size if max_physical_batch_size else batch_size
         super().__init__(llm, experiment_dir, epochs, batch_size, efficient_finetuning, **train_kwargs)
 
     # @property
@@ -112,17 +118,13 @@ class GReaTDP(GReaT):
 
 
         great_trainer = GReaTDPTrainer(
+            max_physical_batch_size=self.max_physical_batch_size,
             model=self.model,
             args=training_args,
             train_dataset=great_ds,
             tokenizer=self.tokenizer,
             data_collator=data_collator,
-            privacy_args=PrivacyArguments(
-                per_sample_max_grad_norm=self.per_sample_max_grad_norm, 
-                target_epsilon=self.target_epsilon, 
-                noise_multiplier=self.noise_multiplier,
-                # disable_dp=True
-                ),
+            privacy_args=self.privacy_args,
         )
 
         # Start training
