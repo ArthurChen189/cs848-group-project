@@ -4,20 +4,18 @@ import typing as tp
 import numpy as np
 import pandas as pd
 import torch
-from be_great.dp.no_dp_trainer import DPLLMTGenTrainerNoDP
-from be_great.dp_basic_trainer import DPBasicTrainer
-from be_great.dp_basic import DPBasic
-from be_great.dp.dp_collator import DataCollatorDPLLMTGen
-from be_great.dp.dp_trainer import DPLLMTGenTrainer
-from be_great.great import GReaT
+
+from transformers import TrainingArguments
+from be_great.DPLLMTGen.dpllmtgen_trainer_nodp import DPLLMTGenTrainerNoDP
+from be_great.DPLLMTGen.dpllmtgen_trainer import DPLLMTGenTrainer
+from be_great.dp_collator import DataCollatorDPLLMTGen
+from be_great.great_dp import GReaTDP
 from be_great.great_dataset import GReaTDataCollator, GReaTDataset
 from be_great.great_trainer import GReaTTrainer
 from be_great.great_utils import _array_to_dataframe
-from transformers import TrainingArguments
 
 
-
-class DPLLMTGen(DPBasic):
+class DPLLMTGen(GReaTDP):
 
     def __init__(
         self,
@@ -36,6 +34,7 @@ class DPLLMTGen(DPBasic):
         loss_alpha: float = 0.65,
         loss_beta: float = 0.1,
         loss_lmbda: float = 1,
+        stage2_batch_size: tp.Optional[int] = None,
         use_dp: bool = True,
         device: str = "cuda",
         **train_kwargs,
@@ -47,6 +46,7 @@ class DPLLMTGen(DPBasic):
         self.loss_alpha = loss_alpha
         self.loss_beta = loss_beta
         self.loss_lmbda = loss_lmbda
+        self.stage2_batch_size = stage2_batch_size
         self.use_dp = use_dp
         self.device = device
         super().__init__(llm, experiment_dir, epochs, batch_size, efficient_finetuning, per_sample_max_grad_norm=per_sample_max_grad_norm, target_epsilon=target_epsilon, noise_multiplier=noise_multiplier, **train_kwargs)
@@ -127,7 +127,7 @@ class DPLLMTGen(DPBasic):
             self.experiment_dir,
             num_train_epochs=self.stage2_epochs,
             learning_rate=self.stage2_lr,
-            per_device_train_batch_size=self.batch_size,
+            per_device_train_batch_size=self.stage2_batch_size if self.stage2_batch_size else self.batch_size,
             remove_unused_columns=False,
             save_safetensors=False, # See https://github.com/microsoft/dp-transformers/issues/51
             **self.train_hyperparameters,
@@ -150,7 +150,6 @@ class DPLLMTGen(DPBasic):
         # Create a trainer first to get the default optimzer and dataloader
         data_collator = DataCollatorDPLLMTGen(self.tokenizer) 
         if self.use_dp:
-            from dp_transformers.arguments import PrivacyArguments
             trainer = DPLLMTGenTrainer(
                 format_token_ids,
                 numerical_token_ids,
@@ -162,12 +161,8 @@ class DPLLMTGen(DPBasic):
                 train_dataset=great_ds,
                 tokenizer=self.tokenizer,
                 data_collator=data_collator,
-                privacy_args=PrivacyArguments(
-                    per_sample_max_grad_norm=self.per_sample_max_grad_norm, 
-                    target_epsilon=self.target_epsilon, 
-                    # noise_multiplier=self.noise_multiplier,
-                    # disable_dp=True
-                ),
+                max_physical_batch_size=self.max_physical_batch_size,
+                privacy_args=self.privacy_args,
             )
         else:
             trainer = DPLLMTGenTrainerNoDP(
@@ -192,30 +187,3 @@ class DPLLMTGen(DPBasic):
                 "final_epsilon_rdp": eps_rdp
             })
         return trainer
-
-        # # define your components as usual
-        # model = self.model
-        # optimizer = great_trainer.create_optimizer()
-        # data_loader = great_trainer.get_train_dataloader()
-
-        # print(model)
-        # print(optimizer)
-        # print(data_loader)
-
-        # privacy_engine = PrivacyEngine()
-        # model, optimizer, data_loader = privacy_engine.make_private(
-        #     module=model,
-        #     optimizer=optimizer,
-        #     data_loader=data_loader,
-        #     noise_multiplier=1.1,
-        #     max_grad_norm=1.0,
-        # )
-
-        # great_trainer.model = model
-        # great_trainer.optimizer = optimizer
-        # great_trainer.dp_train_dataloader = data_loader
-        
-        # # Start training
-        # logging.info("Start DP finetuning...")
-        # great_trainer.train()
-        # return great_trainer

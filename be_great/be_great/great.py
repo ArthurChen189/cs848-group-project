@@ -10,7 +10,7 @@ import pandas as pd
 from tqdm import tqdm
 
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, BitsAndBytesConfig
 
 from be_great.great_dataset import GReaTDataset, GReaTDataCollator
 from be_great.great_start import (
@@ -83,7 +83,6 @@ class GReaT:
         self.use_8bit_quantization = use_8bit_quantization
 
         if use_8bit_quantization:
-            from transformers import BitsAndBytesConfig
             bnb_config = BitsAndBytesConfig(
                 load_in_8bit=True,
                 # bnb_4bit_use_double_quant=True,
@@ -254,7 +253,8 @@ class GReaT:
         great_start = self._get_start_sampler(start_col, start_col_dist)
 
         # Move model to device
-        self.model.to(device)
+        if not self.use_8bit_quantization:
+            self.model.to(device)
 
         # Init list for generated DataFrames
         dfs = []
@@ -491,7 +491,10 @@ class GReaT:
             json.dump(attributes, f)
 
         # Save model weights
-        torch.save(self.model.state_dict(), fs.open(path + "/model.pt", "wb"))
+        if self.efficient_finetuning == "lora":
+            self.model.save_pretrained(path)
+        else:
+            torch.save(self.model.state_dict(), fs.open(path + "/model.pt", "wb"))
 
     def load_finetuned_model(self, path: str):
         """Load fine-tuned model
@@ -532,6 +535,25 @@ class GReaT:
         # Load model weights
         great.model.load_state_dict(torch.load(fs.open(path + "/model.pt", "rb"), map_location="cpu"))
 
+        return great
+
+    @classmethod
+    def load_peft_model(cls, path: str):
+        fs = fsspec.filesystem(fsspec.utils.get_protocol(path))
+        assert fs.exists(path), f"Directory {path} does not exist."
+
+        # Load attributes
+        with fs.open(path + "/config.json", "r") as f:
+            attributes = json.load(f)
+
+        # Create new be_great model instance
+        great = cls(attributes["llm"])
+
+        # Set all attributes
+        for k, v in attributes.items():
+            setattr(great, k, v)
+
+        great.model = AutoModelForCausalLM.from_pretrained(path, quantization_config=BitsAndBytesConfig(load_in_8bit=great.use_8bit_quantization))
         return great
 
     def _update_column_information(self, df: pd.DataFrame):

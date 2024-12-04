@@ -6,8 +6,8 @@ import pandas as pd
 
 from transformers import  TrainingArguments
 
-from be_great.dp.dp_collator import DataCollatorDPLLMTGen
-from be_great.dp_basic_trainer import DPBasicTrainer
+from be_great.dp_collator import DataCollatorDPLLMTGen
+from be_great.great_dp_trainer import GReaTDPTrainer
 from dp_transformers.arguments import PrivacyArguments
 from be_great.great import GReaT
 from be_great.great_dataset import GReaTDataset
@@ -16,7 +16,7 @@ from be_great.great_utils import (
 )
 
 
-class DPBasic(GReaT):
+class GReaTDP(GReaT):
     """GReaT Class
 
     The GReaT class handles the whole generation flow. It is used to fine-tune a large language model for tabular data,
@@ -47,12 +47,18 @@ class DPBasic(GReaT):
         efficient_finetuning: str = "",
         per_sample_max_grad_norm=1., 
         target_epsilon=1., 
+        target_delta=None,
         noise_multiplier=None,
+        max_physical_batch_size:tp.Optional[int]=None,
         **train_kwargs,
     ):
-        self.per_sample_max_grad_norm = per_sample_max_grad_norm
-        self.target_epsilon = target_epsilon
-        self.noise_multiplier = noise_multiplier
+        self.privacy_args = PrivacyArguments(
+            per_sample_max_grad_norm=per_sample_max_grad_norm,
+            target_epsilon=target_epsilon if noise_multiplier is None else None,
+            target_delta=target_delta,
+            noise_multiplier=noise_multiplier
+        )
+        self.max_physical_batch_size = max_physical_batch_size if max_physical_batch_size else batch_size
         super().__init__(llm, experiment_dir, epochs, batch_size, efficient_finetuning, **train_kwargs)
 
     # @property
@@ -75,7 +81,7 @@ class DPBasic(GReaT):
         column_names: tp.Optional[tp.List[str]] = None,
         conditional_col: tp.Optional[str] = None,
         resume_from_checkpoint: tp.Union[bool, str] = False,
-    ) -> DPBasicTrainer:
+    ) -> GReaTDPTrainer:
         """Fine-tune GReaT using tabular data.
 
         Args:
@@ -111,18 +117,14 @@ class DPBasic(GReaT):
         data_collator = DataCollatorDPLLMTGen(self.tokenizer) 
 
 
-        great_trainer = DPBasicTrainer(
+        great_trainer = GReaTDPTrainer(
+            max_physical_batch_size=self.max_physical_batch_size,
             model=self.model,
             args=training_args,
             train_dataset=great_ds,
             tokenizer=self.tokenizer,
             data_collator=data_collator,
-            privacy_args=PrivacyArguments(
-                per_sample_max_grad_norm=self.per_sample_max_grad_norm, 
-                target_epsilon=self.target_epsilon, 
-                noise_multiplier=self.noise_multiplier,
-                # disable_dp=True
-                ),
+            privacy_args=self.privacy_args,
         )
 
         # Start training
