@@ -1,30 +1,25 @@
-from typing import Any, Dict, List, Union
+from typing import List
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
-from be_great.great_trainer import GReaTTrainer
-from transformers import Trainer
 
-class DPLLMTGenTrainerNoDP(Trainer):
+class DPLLMTGenLoss():
     def __init__(
             self, 
             format_token_ids, 
             numerical_token_ids, 
+            processing_class,
             alpha:float = 0.65,
             beta:float = .1, 
             lmbda:float = 1, 
-            **kwargs,
         ):
-        super().__init__(**kwargs)
         self.format_token_ids = format_token_ids
         self.numerical_token_ids = numerical_token_ids
-        self.tokenizer = kwargs["tokenizer"]
+        self.processing_class = processing_class
         self.alpha = alpha
         self.beta = beta
         self.lmbda = lmbda
-
-    # """
-    def compute_loss(self, model, inputs, return_outputs = False, num_items_in_batch = None):
+    
+    def compute_loss(self, model, inputs):
         # loss = super().compute_loss(model, inputs)
         # print(loss)
         # return loss
@@ -105,7 +100,7 @@ class DPLLMTGenTrainerNoDP(Trainer):
         # print(f"loss: {loss} wce_losses: {wce_losses.mean()} nu_losses {self.beta * nu_losses.mean()}")
         # loss = wce_losses.mean()
         return loss
-    # """
+    
 
     def _find_tokens(self, input_ids, token_list: List[torch.tensor]):
         # print(input_ids.size())
@@ -147,30 +142,3 @@ def decode_str_to_num(s):
     except ValueError:
         return False
         
-def find_contiguous_segments(tensor: torch.tensor) -> List[List[int]]:
-    # Unused
-    print(tensor.size())
-    non_matching = (tensor[:-1] != tensor[1:]) < 0  # find end segment mask
-    # Note: instead of checking for "0" diff we simply check for non-equality
-
-    size = tensor.size()[0]
-
-    # index range so we can return start/end indices
-    index_range = torch.arange(0, size, device=tensor.device).reshape(-1,1)
-
-    ends = index_range[1:][non_matching]  # end indices, as in the diagram above
-
-    # print(ends)
-    # print(torch.tensor([[0]], device=tensor.device).size())
-    # print(ends.size())
-    starts = torch.concat((torch.tensor([[0]], device=tensor.device), ends))  # add initial index
-    ends = torch.concat((ends, torch.tensor([[size]], device=tensor.device)))  # add end index
-
-    print(starts.shape)
-    print(ends.shape)
-    indices_tensor = torch.concat((starts, ends), dim=1)
-
-    # Note: much faster than looping!
-    indices_list = indices_tensor.tolist()
-
-    return indices_list

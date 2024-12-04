@@ -1,8 +1,8 @@
 from typing import List
 from be_great.DPLLMTGen.dpllmtgen_loss import DPLLMTGenLoss
-from be_great.great_dp_trainer import GReaTDPTrainer
+from be_great.great_trainer import GReaTTrainer
 
-class DPLLMTGenTrainer(GReaTDPTrainer):
+class DPLLMTGenTrainerNoDP(GReaTTrainer):
     def __init__(
             self, 
             format_token_ids: List[int], 

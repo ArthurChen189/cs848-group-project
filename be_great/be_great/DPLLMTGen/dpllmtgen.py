@@ -4,17 +4,15 @@ import typing as tp
 import numpy as np
 import pandas as pd
 import torch
-from be_great.DPLLMTGen.dpllmtgen_nodp import DPLLMTGenTrainerNoDP
-from be_great.great_dp_trainer import GReaTDPTrainer
-from be_great.great_dp import GReaTDP
-from be_great.dp_collator import DataCollatorDPLLMTGen
+
+from transformers import TrainingArguments
+from be_great.DPLLMTGen.dpllmtgen_trainer_nodp import DPLLMTGenTrainerNoDP
 from be_great.DPLLMTGen.dpllmtgen_trainer import DPLLMTGenTrainer
-from be_great.great import GReaT
+from be_great.dp_collator import DataCollatorDPLLMTGen
+from be_great.great_dp import GReaTDP
 from be_great.great_dataset import GReaTDataCollator, GReaTDataset
 from be_great.great_trainer import GReaTTrainer
 from be_great.great_utils import _array_to_dataframe
-from transformers import TrainingArguments
-
 
 
 class DPLLMTGen(GReaTDP):
@@ -192,30 +190,3 @@ class DPLLMTGen(GReaTDP):
                 "final_epsilon_rdp": eps_rdp
             })
         return trainer
-
-        # # define your components as usual
-        # model = self.model
-        # optimizer = great_trainer.create_optimizer()
-        # data_loader = great_trainer.get_train_dataloader()
-
-        # print(model)
-        # print(optimizer)
-        # print(data_loader)
-
-        # privacy_engine = PrivacyEngine()
-        # model, optimizer, data_loader = privacy_engine.make_private(
-        #     module=model,
-        #     optimizer=optimizer,
-        #     data_loader=data_loader,
-        #     noise_multiplier=1.1,
-        #     max_grad_norm=1.0,
-        # )
-
-        # great_trainer.model = model
-        # great_trainer.optimizer = optimizer
-        # great_trainer.dp_train_dataloader = data_loader
-        
-        # # Start training
-        # logging.info("Start DP finetuning...")
-        # great_trainer.train()
-        # return great_trainer
