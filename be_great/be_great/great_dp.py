@@ -52,6 +52,10 @@ class GReaTDP(GReaT):
         max_physical_batch_size:tp.Optional[int]=None,
         **train_kwargs,
     ):
+        self.per_sample_max_grad_norm = per_sample_max_grad_norm
+        self.target_epsilon = target_epsilon
+        self.target_delta = target_delta
+        self.noise_multiplier = noise_multiplier
         self.privacy_args = PrivacyArguments(
             per_sample_max_grad_norm=per_sample_max_grad_norm,
             target_epsilon=target_epsilon if noise_multiplier is None else None,

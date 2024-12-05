@@ -496,6 +496,7 @@ class GReaT:
             attributes = self.__dict__.copy()
             attributes.pop("tokenizer")
             attributes.pop("model")
+            attributes.pop("privacy_args", False)
 
             # NDArray is not JSON serializable and therefore has to be converted into a list.
             if isinstance(attributes["conditional_col_dist"], np.ndarray):
