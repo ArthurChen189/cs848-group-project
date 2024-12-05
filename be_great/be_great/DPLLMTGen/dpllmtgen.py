@@ -81,7 +81,11 @@ class DPLLMTGen(GReaTDP):
                 if all_ints:
                     rand_df[col_name] = np.random.randint(minval, maxval+1, size=col.size)
                 else:
-                    max_num_decimals = abs(col.map(lambda num: decimal.Decimal(str(num)).as_tuple().exponent).min())
+                    try:
+                        max_num_decimals = abs(col.map(lambda num: decimal.Decimal(str(num)).as_tuple().exponent).min())
+                    except Exception as e:
+                        logging.info("Unable to find max_num_decimals, defaulting to 2 decimal places")
+                        max_num_decimals=2
                     rand_df[col_name] = np.random.uniform(minval, maxval, size=col.size).round(max_num_decimals)
             else:
                 rand_df[col_name] = np.random.choice(col.unique(), size=col.size)
