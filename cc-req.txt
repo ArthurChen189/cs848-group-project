@@ -5,7 +5,6 @@ aiosignal==1.3.1+computecanada
 asttokens==2.4.1+computecanada
 async_timeout==4.0.3+computecanada
 attrs==24.2.0+computecanada
-be_great @ file:////home/qfyan/cs848-group-project/be_great
 bitsandbytes==0.44.0+computecanada
 blobfile==2.1.1+computecanada
 certifi==2024.8.30+computecanada
