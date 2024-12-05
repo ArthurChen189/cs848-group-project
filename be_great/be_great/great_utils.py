@@ -76,6 +76,11 @@ def _convert_tokens_to_text(
     text_data = [d.replace("\n", " ") for d in text_data]
     text_data = [d.replace("\r", "") for d in text_data]
 
+    # For Llama
+    text_data = [d.replace("<s>", "") for d in text_data]
+    text_data = [d.replace("</s>", "") for d in text_data]
+    text_data = [d.replace("<unk>", "") for d in text_data]
+
     return text_data
 
 

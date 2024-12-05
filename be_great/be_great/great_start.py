@@ -90,8 +90,8 @@ class CategoricalStart(GReaTStart):
     def get_start_tokens(self, n_samples):
         start_words = random.choices(self.population, self.weights, k=n_samples)
         start_text = [self.start_col + " is " + str(s) + "," for s in start_words]
-        start_tokens = _pad_tokens(self.tokenizer(start_text)["input_ids"])
-        return start_tokens
+        return start_text
+
 
 
 class ContinuousStart(GReaTStart):
@@ -140,8 +140,8 @@ class ContinuousStart(GReaTStart):
             self.start_col + " is " + format(s, f".{self.decimal_places}f") + ","
             for s in start_words
         ]
-        start_tokens = _pad_tokens(self.tokenizer(start_text)["input_ids"])
-        return start_tokens
+        return start_text
+
 
 
 class RandomStart(GReaTStart):
@@ -166,5 +166,5 @@ class RandomStart(GReaTStart):
     def get_start_tokens(self, n_samples):
         start_words = random.choices(self.all_columns, k=n_samples)
         start_text = [s + " is " for s in start_words]
-        start_tokens = _pad_tokens(self.tokenizer(start_text)["input_ids"])
-        return start_tokens
+        return start_text
+

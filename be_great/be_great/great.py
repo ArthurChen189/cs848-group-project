@@ -93,7 +93,7 @@ class GReaT:
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.llm, 
                 quantization_config=bnb_config, 
-                attn_implementation="flash_attention_2"
+                # attn_implementation="flash_attention_2"
             )
         else:
             self.model = AutoModelForCausalLM.from_pretrained(self.llm)
@@ -250,6 +250,10 @@ class GReaT:
         Returns:
             pd.DataFrame: DataFrame containing n_samples rows of generated data.
         """
+        if "llama" in self.llm.lower():
+            self.tokenizer.padding_side = "left"
+            self.tokenizer.add_special_tokens( { "pad_token": "<PAD>", } )
+            self.model.resize_token_embeddings(self.model.config.vocab_size + 1)
         great_start = self._get_start_sampler(start_col, start_col_dist)
 
         # Move model to device
@@ -266,16 +270,27 @@ class GReaT:
             try:
                 while n_samples > already_generated:
                     start_tokens = great_start.get_start_tokens(k)
-                    start_tokens = torch.tensor(start_tokens).to(device)
+                    if "llama" in self.llm.lower():
+                        start_tokens = self.tokenizer(start_tokens, padding='max_length', truncation=True, max_length=4, return_tensors="pt")
+                        batch = {k: v.to("cuda") for k, v in start_tokens.items()}
+                        tokens = self.model.generate(
+                            **batch,
+                            max_length=max_length,
+                            do_sample=True,
+                            temperature=temperature,
+                        )
+                    else:
+                        start_tokens = _pad_tokens(self.tokenizer(start_tokens)["input_ids"])
+                        start_tokens = torch.tensor(start_tokens).to(device)
 
-                    # Generate tokens
-                    tokens = self.model.generate(
-                        input_ids=start_tokens,
-                        max_length=max_length,
-                        do_sample=True,
-                        temperature=temperature,
-                        pad_token_id=50256,
-                    )
+                        # Generate tokens
+                        tokens = self.model.generate(
+                            input_ids=start_tokens,
+                            max_length=max_length,
+                            do_sample=True,
+                            temperature=temperature,
+                            pad_token_id=50256,
+                        )
 
                     # Convert tokens back to tabular data
                     text_data = _convert_tokens_to_text(tokens, self.tokenizer)
