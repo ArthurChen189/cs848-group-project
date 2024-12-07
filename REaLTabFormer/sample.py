@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, "/home/qfyan/cs848-group-project/REaLTabFormer/src")
+
 import os
 from pathlib import Path
 from realtabformer import REaLTabFormer

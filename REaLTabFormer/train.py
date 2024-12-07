@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, "/home/qfyan/cs848-group-project/REaLTabFormer/src")
+
 import os
 import pandas as pd
 from pathlib import Path

@@ -6,4 +6,4 @@
 #SBATCH --time=0-10:00
 #SBATCH --output=/home/qfyan/cs848-group-project/REaLTabFormer/experiments/logs/rossman.log
 
-python ../../train.py --parent_df "" --child_df "" --join_on "" --output_dir "" --batch_size 32
+python /home/qfyan/cs848-group-project/REaLTabFormer/train.py --parent_df "/home/qfyan/projects-qfyan/privacy_data/rossman_parent.csv" --child_df "/home/qfyan/projects-qfyan/privacy_data/rossman_child.csv" --join_on "Store" --output_dir "/home/qfyan/projects-qfyan/privacy_checkpoints"
