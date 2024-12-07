@@ -13,6 +13,12 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+# See https://github.com/microsoft/dp-transformers/blob/main/README.md
+import dp_transformers
+from dp_transformers.grad_sample.transformers import conv_1d 
+from dp_transformers.arguments import PrivacyArguments
+
+
 import numpy as np
 import pandas as pd
 import torch
@@ -30,6 +36,7 @@ from transformers import (
     Trainer,
     TrainingArguments,
 )
+import transformers
 from transformers.models.gpt2 import GPT2Config, GPT2LMHeadModel
 
 import realtabformer
@@ -50,6 +57,9 @@ from rtf_exceptions import SampleEmptyLimitError
 from rtf_sampler import RelationalSampler, TabularSampler
 from rtf_trainer import ResumableTrainer
 from rtf_validators import ObservationValidator
+
+from rtf_trainer_dp import ResumableTrainerDP
+from seq2seq_trainer_dp import Seq2SeqDataCollator, Seq2SeqTrainerDP
 
 
 def _normalize_gpt2_state_dict(state_dict):
@@ -103,6 +113,11 @@ class REaLTabFormer:
         numeric_nparts: int = 1,
         numeric_precision: int = 4,
         numeric_max_len: int = 10,
+        use_dp: bool = False,
+        per_sample_max_grad_norm = 1., 
+        target_epsilon = 1.,
+        target_delta = None,
+        noise_multiplier = None,
         **training_args_kwargs,
     ) -> None:
         """Set up a REaLTabFormer instance.
@@ -274,6 +289,12 @@ class REaLTabFormer:
         # Target column, when set, a copy of the column values will be
         # implicitly placed at the beginning of the dataframe.
         self.target_col = None
+
+        self.use_dp = use_dp
+        self.per_sample_max_grad_norm = per_sample_max_grad_norm
+        self.target_epsilon = target_epsilon
+        self.target_delta = target_delta
+        self.noise_multiplier = noise_multiplier
 
         # self.realtabformer_version = realtabformer.__version__
 
@@ -1025,13 +1046,32 @@ class REaLTabFormer:
             ]
 
         # instantiate trainer
-        trainer = Seq2SeqTrainer(
-            model=self.model,
-            args=Seq2SeqTrainingArguments(**training_args_kwargs),
-            callbacks=callbacks,
-            data_collator=RelationalDataCollator(),
-            **dataset,
-        )
+        if self.use_dp:
+            # tokenizer = transformers.AutoTokenizer.from_pretrained("gpt2")
+            data_collator = Seq2SeqDataCollator()
+            trainer = Seq2SeqTrainerDP(
+                model=self.model,
+                args=Seq2SeqTrainingArguments(**training_args_kwargs),
+                callbacks=callbacks,
+                data_collator=RelationalDataCollator(),
+                data_collator=data_collator,  # Use the default_data_collator
+                # tokenizer=tokenizer,
+                privacy_args=PrivacyArguments(
+                    per_sample_max_grad_norm=self.per_sample_max_grad_norm,
+                    target_epsilon=self.target_epsilon if self.noise_multiplier is None else None,
+                    target_delta=self.target_delta,
+                    noise_multiplier=self.noise_multiplier
+                ),
+                **dataset,
+            )
+        else:
+            trainer = Seq2SeqTrainer(
+                model=self.model,
+                args=Seq2SeqTrainingArguments(**training_args_kwargs),
+                callbacks=callbacks,
+                data_collator=RelationalDataCollator(),
+                **dataset,
+            )
 
         return trainer
 
@@ -1137,15 +1177,35 @@ class REaLTabFormer:
             ]
 
         assert self.dataset
-        trainer = ResumableTrainer(
-            target_epochs=target_epochs,
-            save_epochs=None,
-            model=self.model,
-            args=TrainingArguments(**training_args_kwargs),
-            data_collator=None,  # Use the default_data_collator
-            callbacks=callbacks,
-            **self.dataset,
-        )
+        if self.use_dp:
+            tokenizer = transformers.AutoTokenizer.from_pretrained("gpt2")
+            data_collator = dp_transformers.DataCollatorForPrivateCausalLanguageModeling(tokenizer)
+            trainer = ResumableTrainerDP(
+                target_epochs=target_epochs,
+                save_epochs=None,
+                model=self.model,
+                args=TrainingArguments(**training_args_kwargs),
+                data_collator=data_collator,
+                tokenizer=tokenizer,
+                callbacks=callbacks,
+                privacy_args=PrivacyArguments(
+                    per_sample_max_grad_norm=self.per_sample_max_grad_norm,
+                    target_epsilon=self.target_epsilon if self.noise_multiplier is None else None,
+                    target_delta=self.target_delta,
+                    noise_multiplier=self.noise_multiplier
+                ),
+                **self.dataset,
+            )
+        else:
+            trainer = ResumableTrainer(
+                target_epochs=target_epochs,
+                save_epochs=None,
+                model=self.model,
+                args=TrainingArguments(**training_args_kwargs),
+                data_collator=None,  # Use the default_data_collator
+                callbacks=callbacks,
+                **self.dataset,
+            )
 
         return trainer
 
