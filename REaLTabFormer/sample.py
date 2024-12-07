@@ -14,13 +14,16 @@ def parse_args():
                        help='Number of samples to generate')
     parser.add_argument('--join-on', type=str, required=False,
                        help='Column name to join parent and child tables')
-    parser.add_argument('--output-dir', type=str, default='synthesized',
+    parser.add_argument('--output-dir', type=str, default='synthesized/realtabformer',
                        help='Output directory for generated samples')
     parser.add_argument('--batch-size', type=int, default=36,
                        help='Batch size')
+    parser.add_argument('--dataset-name', type=str, required=True,
+                       help='Name of the dataset')
     return parser.parse_args()
 
 def main(args):
+    output_path = Path(args.output_dir, args.dataset_name)
     if args.parent_model_path is None:
         # if non-relational data, we only need to load the child model
         model = REaLTabFormer.load_from_dir(args.child_model_path)
@@ -29,7 +32,7 @@ def main(args):
             gen_batch=args.batch_size
             )
         # save the samples
-        output_path = Path(args.output_dir) / f'samples_{datetime.now().strftime("%Y_%m_%d_%H_%M")}.csv'
+        output_path = output_path / f'samples_num_samples={args.num_samples}.csv'
         samples.to_csv(output_path, index=False)
     else:
         # Create output directory if it doesn't exist
@@ -56,8 +59,8 @@ def main(args):
         date = datetime.now().strftime("%Y_%m_%d_%H_%M")
 
         # Save the samples
-        parent_output = Path(args.output_dir) / f'parent_samples_{date}.csv'
-        child_output = Path(args.output_dir) / f'child_samples_{date}.csv'
+        parent_output = output_path / f'parent_samples_{date}.csv'
+        child_output = output_path / f'child_samples_{date}.csv'
         
         parent_samples.to_csv(parent_output, index=False)
         child_samples.to_csv(child_output, index=False)
