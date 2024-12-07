@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from transformers import DefaultDataCollator, PreTrainedModel
 
-from .data_utils import (
+from data_utils import (
     INVALID_NUMS_RE,
     NUMERIC_NA_TOKEN,
     ModelType,
@@ -28,8 +28,8 @@ from .data_utils import (
     make_dataset,
     process_data,
 )
-from .rtf_exceptions import SampleEmptyError, SampleEmptyLimitError
-from .rtf_validators import ObservationValidator
+from rtf_exceptions import SampleEmptyError, SampleEmptyLimitError
+from rtf_validators import ObservationValidator
 
 NQ_COL = "_nq_ds_"
 

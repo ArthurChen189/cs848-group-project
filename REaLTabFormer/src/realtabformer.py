@@ -34,7 +34,7 @@ from transformers.models.gpt2 import GPT2Config, GPT2LMHeadModel
 
 import realtabformer
 
-from .data_utils import (
+from data_utils import (
     ModelFileName,
     ModelType,
     SpecialTokens,
@@ -44,12 +44,12 @@ from .data_utils import (
     make_relational_dataset,
     process_data,
 )
-from .rtf_analyze import SyntheticDataBench
-from .rtf_datacollator import RelationalDataCollator
-from .rtf_exceptions import SampleEmptyLimitError
-from .rtf_sampler import RelationalSampler, TabularSampler
-from .rtf_trainer import ResumableTrainer
-from .rtf_validators import ObservationValidator
+from rtf_analyze import SyntheticDataBench
+from rtf_datacollator import RelationalDataCollator
+from rtf_exceptions import SampleEmptyLimitError
+from rtf_sampler import RelationalSampler, TabularSampler
+from rtf_trainer import ResumableTrainer
+from rtf_validators import ObservationValidator
 
 
 def _normalize_gpt2_state_dict(state_dict):
@@ -275,7 +275,7 @@ class REaLTabFormer:
         # implicitly placed at the beginning of the dataframe.
         self.target_col = None
 
-        self.realtabformer_version = realtabformer.__version__
+        # self.realtabformer_version = realtabformer.__version__
 
     def _invalid_model_type(self, model_type):
         raise ValueError(
