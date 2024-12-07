@@ -42,7 +42,7 @@ great = DPLLMTGen(
 
 trainer = great.fit(data, column_names=column_names)
 
-great.save(f"/home/qfyan/projects-qfyan/privacy_checkpoints/{TASK_NAME}_train_final")
+great.save(f"/home/qfyan/projects-qfyan/privacy_checkpoints/{TASK_NAME}_final")
 
 # Generate synthetic data
 samples = great.sample(min(len(data), 1000), k=16, max_length=1000, device="cuda")

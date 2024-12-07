@@ -24,7 +24,7 @@ great = GReaT(
     epochs=110,
     save_steps=4000,
     logging_steps=20,
-    experiment_dir=f"/home/qfyan/projects-qfyan/scratch/{TASK_NAME}",
+    experiment_dir=f"/home/qfyan/scratch/privacy_checkpoints/{TASK_NAME}",
     logging_dir=f'/home/qfyan/projects-qfyan/privacy_checkpoints/{TASK_NAME}/logs',
     batch_size=32,
     learning_rate=5e-5,
@@ -32,7 +32,7 @@ great = GReaT(
 
 trainer = great.fit(data, column_names=column_names)
 
-great.save(f"/home/qfyan/projects-qfyan/privacy_checkpoints/{TASK_NAME}_train_final")
+great.save(f"/home/qfyan/projects-qfyan/privacy_checkpoints/{TASK_NAME}_final")
 
 # Generate synthetic data
 samples = great.sample(min(len(data), 1000), k=16, max_length=1000, device="cuda")
