@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
+
+
 class DataLoader():
     def __init__(self, datapath, configpath, datainfopath, dataschemapath):
         self.configpath = configpath
@@ -117,7 +119,7 @@ class DataLoader():
         for attribute, encode_mapping in self.encode_mapping.items():
             self.encode_schema[attribute] = sorted(encode_mapping.values())
             self.all_attrs.append(attribute)
-        display(self.private_data.head())
+        print("Data loaded successfully. Shape:", self.private_data.shape)
 
     def encode_remaining(self, schema, config, data):
         encoded_attributes = list(config['binning_list'].keys()) # + [grouping['grouped_name'] for grouping in config['grouping_list'] if grouping is not None]

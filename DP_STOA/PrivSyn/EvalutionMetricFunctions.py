@@ -1,11 +1,9 @@
 # Evaluation Metric Functions
 import pandas as pd
-from sklearn.metrics import f1_score, r2_score, mean_squared_error
+from sklearn.metrics import f1_score, r2_score
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import  LabelEncoder, MinMaxScaler
-from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.preprocessing import  LabelEncoder
 import numpy as np
 
 def evaluate_mle(data, categorical_cols=None):
@@ -18,11 +16,6 @@ def evaluate_mle(data, categorical_cols=None):
     # Prepare features
     X = data.copy()
     numerical_cols = [col for col in X.columns if col not in categorical_cols]
-    
-    # Scale numerical features
-    scaler = MinMaxScaler()
-    if numerical_cols:
-        X[numerical_cols] = scaler.fit_transform(X[numerical_cols])
     
     f1_scores = []
     r2_scores = []
@@ -45,14 +38,6 @@ def evaluate_mle(data, categorical_cols=None):
         split_idx = int(0.8 * len(features))
         X_train, X_test = features.iloc[:split_idx], features.iloc[split_idx:]
         y_train, y_test = y[:split_idx], y[split_idx:]
-        
-        # Scale numerical features after split
-        if numerical_cols:
-            scaler = MinMaxScaler()
-            num_cols = [col for col in numerical_cols if col in X_train.columns]
-            if num_cols:
-                X_train[num_cols] = scaler.fit_transform(X_train[num_cols])
-                X_test[num_cols] = scaler.transform(X_test[num_cols])
         
         # Train classifier
         model = RandomForestClassifier(
