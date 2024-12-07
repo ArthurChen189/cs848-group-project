@@ -1053,7 +1053,6 @@ class REaLTabFormer:
                 model=self.model,
                 args=Seq2SeqTrainingArguments(**training_args_kwargs),
                 callbacks=callbacks,
-                data_collator=RelationalDataCollator(),
                 data_collator=data_collator,  # Use the default_data_collator
                 # tokenizer=tokenizer,
                 privacy_args=PrivacyArguments(
