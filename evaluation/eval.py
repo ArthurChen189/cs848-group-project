@@ -115,15 +115,14 @@ def main(args):
     rossmann_private_train_df.dropna(inplace=True)
     rossmann_private_train_df.reset_index(drop=True, inplace=True)
 
-
-    print(f"Evaluating rossmann child")
-    emf.calculate_ld_score(rossmann_private_child_train_df, rossmann_synthetic_child_train_df, 
-                    categorical_cols=["Open", "Promo", "StateHoliday", "SchoolHoliday"]
-                    );
-
     print(f"Evaluating rossmann parent")
     emf.calculate_ld_score(rossmann_private_parent_train_df, rossmann_synthetic_parent_train_df, 
                     categorical_cols=["StoreType", "Assortment"]
+                    );
+    
+    print(f"Evaluating rossmann child")
+    emf.calculate_ld_score(rossmann_private_child_train_df, rossmann_synthetic_child_train_df, 
+                    categorical_cols=["Open", "Promo", "StateHoliday", "SchoolHoliday"]
                     );
 
     print(f"Evaluating rossmann merged")
