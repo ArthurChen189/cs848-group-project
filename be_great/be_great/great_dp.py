@@ -4,6 +4,9 @@ import logging
 import numpy as np
 import pandas as pd
 
+# See https://github.com/microsoft/dp-transformers/blob/main/README.md
+from dp_transformers.grad_sample.transformers import conv_1d 
+
 from transformers import  TrainingArguments
 
 from be_great.dp_collator import DataCollatorDPLLMTGen
@@ -138,10 +141,12 @@ class GReaTDP(GReaT):
         finally:
             eps_prv = great_trainer.get_prv_epsilon()
             eps_rdp = great_trainer.get_rdp_epsilon()
-            great_trainer.log({
+            privacy_stats = {
                 "final_epsilon_prv": eps_prv,
                 "final_epsilon_rdp": eps_rdp
-            })
+            }
+            print(privacy_stats)
+            great_trainer.log(privacy_stats)
             return great_trainer
 
 

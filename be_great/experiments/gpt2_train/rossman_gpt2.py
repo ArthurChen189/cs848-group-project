@@ -21,7 +21,7 @@ column_names = data.columns
 great = GReaT(
     "/home/qfyan/projects-qfyan/openai-community/gpt2",
     epochs=300,
-    save_steps=2000,
+    save_steps=4000,
     logging_steps=20,
     experiment_dir=f"/home/qfyan/scratch/privacy_checkpoints/{TASK_NAME}",
     logging_dir=f'/home/qfyan/projects-qfyan/privacy_checkpoints/{TASK_NAME}/logs',

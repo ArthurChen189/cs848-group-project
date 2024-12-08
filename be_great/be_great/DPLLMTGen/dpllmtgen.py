@@ -37,6 +37,7 @@ class DPLLMTGen(GReaTDP):
         stage2_batch_size: tp.Optional[int] = None,
         use_dp: bool = True,
         device: str = "cuda",
+        skip_to_stage2: bool = False,
         **train_kwargs,
     ):
         self.stage1_epochs = stage1_epochs
@@ -48,6 +49,7 @@ class DPLLMTGen(GReaTDP):
         self.loss_lmbda = loss_lmbda
         self.stage2_batch_size = stage2_batch_size
         self.use_dp = use_dp
+        self.skip_to_stage2 = skip_to_stage2
         self.device = device
         super().__init__(llm, experiment_dir, epochs, batch_size, efficient_finetuning, per_sample_max_grad_norm=per_sample_max_grad_norm, target_epsilon=target_epsilon, noise_multiplier=noise_multiplier, **train_kwargs)
 
@@ -64,8 +66,9 @@ class DPLLMTGen(GReaTDP):
         self._update_column_information(df)
         self._update_conditional_information(df, conditional_col)
 
-        trainer = self.fit_format_learning(df, resume_from_checkpoint)
-        trainer = self.fit_DP_finetune(df)
+        if not self.skip_to_stage2:
+            trainer = self.fit_format_learning(df, resume_from_checkpoint)
+        trainer = self.fit_DP_finetune(df, resume_from_checkpoint)
         return trainer
     
     def fit_format_learning(self, df: pd.DataFrame, resume_from_checkpoint: bool | str = False) -> GReaTTrainer:
@@ -118,7 +121,7 @@ class DPLLMTGen(GReaTDP):
         great_trainer.train(resume_from_checkpoint=resume_from_checkpoint)
         return great_trainer
     
-    def fit_DP_finetune(self, df: pd.DataFrame) -> GReaTTrainer:
+    def fit_DP_finetune(self, df: pd.DataFrame, resume_from_checkpoint: bool | str = False) -> GReaTTrainer:
 
         # Convert DataFrame into HuggingFace dataset object
         logging.info("Convert data into HuggingFace dataset object...")
@@ -182,12 +185,16 @@ class DPLLMTGen(GReaTDP):
                 data_collator=data_collator,
             )
 
+        # trainer.train(resume_from_checkpoint=resume_from_checkpoint)
         trainer.train()
+
         if self.use_dp:
             eps_prv = trainer.get_prv_epsilon()
             eps_rdp = trainer.get_rdp_epsilon()
-            trainer.log({
+            privacy_stats = {
                 "final_epsilon_prv": eps_prv,
                 "final_epsilon_rdp": eps_rdp
-            })
+            }
+            print(privacy_stats)
+            trainer.log(privacy_stats)
         return trainer

@@ -1,4 +1,4 @@
-TASK_NAME = "rossman_gpt2_dp_train"
+TASK_NAME = "rossmann_gpt2_dp_train"
 
 import os
 import sys
@@ -28,8 +28,8 @@ great = DPLLMTGen(
     logging_dir=f'/home/qfyan/projects-qfyan/privacy_checkpoints/{TASK_NAME}/logs',
     batch_size=32,                 # Batch Size
     # lr_scheduler_type="constant", # Specify the learning rate scheduler 
-    stage1_epochs = 300,
-    stage2_epochs = 150,
+    stage1_epochs = 120,
+    stage2_epochs = 60,
     stage1_lr =1e-5,
     stage2_lr=5e-5,
     loss_alpha=0.65,
@@ -40,7 +40,7 @@ great = DPLLMTGen(
     stage2_batch_size=8,
 )
 
-trainer = great.fit(data, column_names=column_names)
+trainer = great.fit(data, column_names=column_names, resume_from_checkpoint=True)
 
 great.save(f"/home/qfyan/projects-qfyan/privacy_checkpoints/{TASK_NAME}_final")
 
