@@ -8,7 +8,8 @@
     "BMI": "float64",
     "DiabetesPedigreeFunction": "uint16",
     "Age": "uint8",
-    "Outcome": "uint8"
+    "Outcome": "uint8",
+    "ID": "uint16"
   },
   "fillna": {
     "Pregnancies": 0,
@@ -19,9 +20,7 @@
     "BMI": 0,
     "DiabetesPedigreeFunction": 0,
     "Age": 0,
-    "Outcome": 0
+    "Outcome": 0,
+    "ID": 0
   }
 }
-
-
-
