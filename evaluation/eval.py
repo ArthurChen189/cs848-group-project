@@ -1,4 +1,4 @@
-import EvalutionMetricFunctions as emf
+import evaluation.eval_utils as emf
 import pandas as pd
 from pathlib import Path
 from glob import glob
@@ -83,6 +83,62 @@ def main(args):
 
         print(f"Evaluating california housing")
         emf.calculate_dm_score(private_test_dfs['california_housing'], synthetic_train_dfs['california_housing'], categorical_cols=CALIFORNIA_HOUSING_CATEGORICAL_COLUMNS)
+
+
+    # rossmann
+    rossmann_synthetic_child_train_path = glob(str(SYNTHETIC_TRAIN_PATH / args.model / 'rossmann' / f'child_samples_num_samples=*.csv'))[0]
+    rossmann_synthetic_parent_train_path = glob(str(SYNTHETIC_TRAIN_PATH / args.model / 'rossmann' / f'parent_samples_num_samples=*.csv'))[0]
+    rossmann_synthetic_child_train_df = pd.read_csv(rossmann_synthetic_child_train_path)
+    rossmann_synthetic_parent_train_df = pd.read_csv(rossmann_synthetic_parent_train_path)
+    # join synthetic child and parent train dataframes on 'Store' column
+    rossmann_synthetic_train_df = pd.merge(rossmann_synthetic_child_train_df, rossmann_synthetic_parent_train_df, on='Store')
+
+    rossmann_private_child_train_path = glob(str(ORIGINAL_DATA_PATH / 'rossmann' / f'rossmann_train.csv'))[0]
+    rossmann_private_parent_train_path = glob(str(ORIGINAL_DATA_PATH / 'rossmann' / f'rossmann_parent.csv'))[0]
+    rossmann_private_child_train_df = pd.read_csv(rossmann_private_child_train_path)
+    rossmann_private_parent_train_df = pd.read_csv(rossmann_private_parent_train_path)
+    # join private child and parent train dataframes on 'Store' column
+    rossmann_private_train_df = pd.merge(rossmann_private_child_train_df, rossmann_private_parent_train_df, on='Store')
+
+
+    # child data
+    rossmann_synthetic_child_train_df.drop(columns=["Store", "Date"], inplace=True)
+    rossmann_synthetic_child_train_df.reset_index(drop=True, inplace=True)
+    rossmann_private_child_train_df.drop(columns=["Store", "Date"], inplace=True)
+    rossmann_private_child_train_df.reset_index(drop=True, inplace=True) # reset index the length of synthetic train data
+
+    # parent data
+    rossmann_private_parent_train_df.drop(columns=["Store", "Promo2", "PromoInterval", "Promo2SinceWeek", "Promo2SinceYear"], inplace=True)
+    # drop na values
+    rossmann_private_parent_train_df.dropna(inplace=True)
+    rossmann_private_parent_train_df.reset_index(drop=True, inplace=True)
+    rossmann_synthetic_parent_train_df.drop(columns=["Store", "Promo2", "PromoInterval", "Promo2SinceWeek", "Promo2SinceYear", "Unnamed: 0"], inplace=True)
+    rossmann_synthetic_parent_train_df.reset_index(drop=True, inplace=True)
+
+    # merged data
+    rossmann_synthetic_train_df = rossmann_synthetic_train_df.drop(columns=["Store", "Date", "Promo2", "PromoInterval", 
+                                                                            "Promo2SinceWeek", "Promo2SinceYear", "Unnamed: 0"])
+    rossmann_private_train_df = rossmann_private_train_df.drop(columns=["Store", "Date", "Promo2", "PromoInterval", 
+                                                                        "Promo2SinceWeek", "Promo2SinceYear"])
+
+    # drop na values
+    rossmann_private_train_df.dropna(inplace=True)
+    rossmann_private_train_df.reset_index(drop=True, inplace=True)
+
+    print(f"Evaluating rossmann parent")
+    emf.calculate_ld_score(rossmann_private_parent_train_df, rossmann_synthetic_parent_train_df, 
+                    categorical_cols=["StoreType", "Assortment"]
+                    );
+    
+    print(f"Evaluating rossmann child")
+    emf.calculate_ld_score(rossmann_private_child_train_df, rossmann_synthetic_child_train_df, 
+                    categorical_cols=["Open", "Promo", "StateHoliday", "SchoolHoliday"]
+                    );
+
+    print(f"Evaluating rossmann merged")
+    emf.calculate_ld_score(rossmann_private_train_df, rossmann_synthetic_train_df, 
+                    categorical_cols=["Open", "Promo", "StateHoliday", "SchoolHoliday", "StoreType", "Assortment"]
+                    );
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

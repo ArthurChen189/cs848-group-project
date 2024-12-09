@@ -56,13 +56,12 @@ def main(args):
             input_df=parent_samples.drop(args.join_on, axis=1),
             gen_batch=args.batch_size)
 
-
         # Save the samples
         parent_output = output_path / f'parent_samples_num_samples={args.num_samples}.csv'
         child_output = output_path / f'child_samples_num_samples={args.num_samples}.csv'
         
-        parent_samples.to_csv(parent_output, index=False)
-        child_samples.to_csv(child_output, index=False)
+        parent_samples.to_csv(parent_output, index=True)
+        child_samples.to_csv(child_output, index=True)
 
 if __name__ == '__main__':
     args = parse_args()

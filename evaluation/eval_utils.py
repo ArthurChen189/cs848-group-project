@@ -5,6 +5,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import  LabelEncoder
 import numpy as np
 from xgboost import XGBClassifier, XGBRegressor
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import KFold
 
 def evaluate_mle(synthetic_train_data: pd.DataFrame, private_test_data: pd.DataFrame, categorical_cols: list = [], 
                  target_cols_categorical: list = [], target_cols_numerical: list = []) -> float:
@@ -154,3 +157,63 @@ def calculate_dm_score(private_x: pd.DataFrame, synthetic_x: pd.DataFrame, categ
     accuracy = clf.score(X_test, y_test)
     print(f"DM Score: {accuracy:.4f}")
     return accuracy
+
+
+
+def calculate_ld_score(real_data: pd.DataFrame, synthetic_data: pd.DataFrame, n_splits: int = 3, categorical_cols: list = []) -> float:
+    """Calculate the Logistic Detection (LD) metric to evaluate the quality of synthetic data.
+    
+    Args:
+        real_data (pd.DataFrame): Real dataset
+        synthetic_data (pd.DataFrame): Synthetic dataset
+        n_splits (int, optional): Number of cross-validation folds. Defaults to 3.
+        categorical_cols (list, optional): List of categorical column names. Defaults to [].
+    
+    Returns:
+        float: Logistic Detection (LD) score (0-100, higher implies better quality).
+    """
+    # Prepare data
+    real_data = real_data.copy()
+    synthetic_data = synthetic_data.copy()
+    real_data['is_synthetic'] = 1
+    synthetic_data['is_synthetic'] = 0
+    
+    # Combine data first
+    combined_data = pd.concat([real_data, synthetic_data], ignore_index=True)
+    
+    # One-hot encode categorical features after combining
+    if categorical_cols:
+        combined_data = pd.get_dummies(combined_data, columns=categorical_cols)
+    
+    X = combined_data.drop('is_synthetic', axis=1)
+    y = combined_data['is_synthetic']
+    
+    # Initialize cross-validation
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
+    roc_auc_scores = []
+    
+    for train_index, test_index in kf.split(X):
+        # Split into train and test sets
+        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+        
+        # Train random forest classifier
+        clf = RandomForestClassifier(random_state=42)
+        clf.fit(X_train, y_train)
+        
+        # Predict probabilities for the test set
+        y_proba = clf.predict_proba(X_test)[:, 1]
+        
+        # Compute ROC-AUC score
+        roc_auc = roc_auc_score(y_test, y_proba)
+        roc_auc_scores.append(roc_auc)
+    
+    # Compute μRA
+    mu_ra = np.mean([max(0.5, auc) for auc in roc_auc_scores]) * 2 - 1
+    
+    # Compute LD
+    ld_score = 100 * (1 - mu_ra)
+    
+    print(f"LD Score: {ld_score:.4f}")
+    return ld_score
+

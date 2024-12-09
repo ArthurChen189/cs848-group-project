@@ -3,3 +3,5 @@ DP_STOA/PrivSyn/tabddpm/
 datasets/
 rossmann-data/*
 synthesized/*
+**/__pycache__
+*checkpoints/
