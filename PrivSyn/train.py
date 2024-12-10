@@ -6,7 +6,7 @@ from GUM import GraduallyUpdateMethod
 import os
 import argparse
 
-def train_model(datasetType, epsilon=0.5, delta=3e-11, data_dir='../data_config'):
+def train_model(datasetType, epsilon=0.5, delta=3e-11, data_dir='./data_config'):
     """Train the DP-STOA model and save the trained components."""
     
     print(f"\nTraining model for {datasetType} dataset...")
@@ -14,9 +14,9 @@ def train_model(datasetType, epsilon=0.5, delta=3e-11, data_dir='../data_config'
     
     # Initialize PrivSyn components
     dl = DataLoader(f'{data_dir}/{datasetType}/{datasetType}_train.csv', 
-                   f'../data_config/{datasetType}/data.yaml', 
-                   f'../data_config/{datasetType}/column_info.json', 
-                   f'../data_config/{datasetType}/loading_data.json')
+                   f'./data_config/{datasetType}/data.yaml', 
+                   f'./data_config/{datasetType}/column_info.json', 
+                   f'./data_config/{datasetType}/loading_data.json')
     dl.data_loader()
     dl.all_indifs(dl.private_data)
     
@@ -54,7 +54,7 @@ if __name__ == "__main__":
                       help='Privacy parameter epsilon')
     parser.add_argument('--delta', type=float, default=3e-11,
                       help='Privacy parameter delta')
-    parser.add_argument('--data_dir', type=str, default='../data_config',
+    parser.add_argument('--data_dir', type=str, default='./data_config',
                       help='Directory containing dataset configurations')
     
     args = parser.parse_args()

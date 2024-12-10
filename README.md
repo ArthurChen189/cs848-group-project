@@ -59,13 +59,13 @@ unzip datasets.zip
 First, change to the PrivSyn directory:
 
 ```bash
-cd DP_STOA/PrivSyn
+cd /PrivSyn
 ```
 
 To train a PrivSyn model on non-relational data, run:
 
 ```bash
-python PrivSyn/train.py \
+python train.py \
     --dataset <dataset_name> \
     --epsilon <epsilon> \
     --delta <delta> \
