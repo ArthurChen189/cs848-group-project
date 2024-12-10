@@ -21,11 +21,12 @@ def main(args):
     # get the name of the output directory
     dataset_name = args.child_df.split("/")[-2]
     output_dir = Path(args.output_dir, dataset_name)
+    os.makedirs(output_dir, exist_ok=True)
     if args.parent_df is None:
         # if no parent df is provided, that means we only need to train one model for non-relational data
         # load the data
         df = pd.read_csv(args.child_df)
-        model = REaLTabFormer(model_type="tabular", gradient_accumulation_steps=4, batch_size=args.batch_size)
+        model = REaLTabFormer(model_type="tabular", gradient_accumulation_steps=4, batch_size=args.batch_size, checkpoints_dir=output_dir)
         model.fit(df)
     
         # save the model
@@ -47,12 +48,14 @@ def main(args):
                 (join_on in child_df.columns))
 
         # Train the parent model.
+        pdir = Path(output_dir, "parent")
+
         # Non-relational or parent table. Don't include the unique_id field.
-        parent_model = REaLTabFormer(model_type="tabular", batch_size=args.batch_size)
+        os.makedirs(pdir, exist_ok=True)
+        parent_model = REaLTabFormer(model_type="tabular", batch_size=args.batch_size, checkpoints_dir=pdir)
         parent_model.fit(parent_df.drop(join_on, axis=1))
 
         # save the parent model
-        pdir = Path(output_dir, "parent")
         parent_model.save(pdir)
 
         # Get the most recently saved parent model,
@@ -61,6 +64,9 @@ def main(args):
             p for p in pdir.glob("id*") if p.is_dir()],
             key=os.path.getmtime)[-1]
         print(f"Using parent model from {parent_model_path}")
+
+        cdir = Path(output_dir, "child")
+        os.makedirs(cdir, exist_ok=True)
 
         # load the child model
         child_model = REaLTabFormer(
@@ -71,8 +77,7 @@ def main(args):
             batch_size=args.batch_size,
             gradient_accumulation_steps=4,
             train_size=0.8,
-            use_dp=args.use_dp != 0,
-        )
+            checkpoints_dir=cdir)
 
         child_model.fit(
             df=child_df,
@@ -80,7 +85,6 @@ def main(args):
             join_on=join_on)
 
         # save the child model
-        cdir = Path(output_dir, "child")
         child_model.save(cdir)
 
 if __name__ == "__main__":

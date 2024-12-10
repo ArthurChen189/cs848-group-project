@@ -1,0 +1,34 @@
+---
+identifier_list: []
+
+binning_list:
+  "Store":
+    - 1
+    - 1115
+    - 1
+  "CompetitionDistance":
+    - 20.0
+    - 75860.0
+    - 100
+  "CompetitionOpenSinceMonth":
+    - 1.0
+    - 12.0
+    - 1
+  "CompetitionOpenSinceYear":
+    - 1961.0
+    - 2015.0
+    - 1
+  "Promo2":
+    - 0
+    - 1
+    - 1
+  "Promo2SinceWeek":
+    - 1.0
+    - 52.0
+    - 1
+  "Promo2SinceYear":
+    - 2009.0
+    - 2015.0
+    - 1
+
+categorical_list:

@@ -1,0 +1,73 @@
+{
+  "schema": {
+    "longitude": {
+      "dtype": "float64",
+      "kind": "numeric",
+      "min": -124.3,
+      "max": -114.3,
+      "bins": 1
+    },
+    "latitude": {
+      "dtype": "float64",
+      "kind": "numeric",
+      "min": 32.5,
+      "max": 42.0,
+      "bins": 1
+    },
+    "housing_median_age": {
+      "dtype": "float64",
+      "kind": "numeric",
+      "min": 1,
+      "max": 52,
+      "bins": 5
+    },
+    "total_rooms": {
+      "dtype": "float64",
+      "kind": "numeric",
+      "min": 2,
+      "max": 39320,
+      "bins": 10
+    },
+    "total_bedrooms": {
+      "dtype": "float64",
+      "kind": "numeric",
+      "min": 1,
+      "max": 6445,
+      "bins": 10
+    },
+    "population": {
+      "dtype": "float64",
+      "kind": "numeric",
+      "min": 3,
+      "max": 35682,
+      "bins": 20
+    },
+    "households": {
+      "dtype": "float64",
+      "kind": "numeric",
+      "min": 1,
+      "max": 6082,
+      "bins": 20
+    },
+    "median_income": {
+      "dtype": "float64",
+      "kind": "numeric",
+      "min": 0.4999,
+      "max": 15.0001,
+      "bins": 10
+    },
+    "median_house_value": {
+      "dtype": "float64",
+      "kind": "numeric",
+      "min": 14999,
+      "max": 500001,
+      "bins": 20
+    },
+    "ocean_proximity": {
+      "dtype": "str",
+      "kind": "categorical",
+      "values": ["NEAR BAY", "INLAND", "<1H OCEAN", "NEAR OCEAN", "ISLAND"],
+      "codes": [0, 1, 2, 3, 4]
+    }
+  }
+}

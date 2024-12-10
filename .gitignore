@@ -1,10 +1,7 @@
-trainer_*
-wandb
-*_base
-*_dp
-*.csv
-!**/samples/*.csv
-#rossmann-data/raw/*.csv
 DP_STOA/PrivSyn/tabddpm/
 datasets/
 rossmann-data/*
+PrivSyn/tabddpm/
+synthesized/*
+**/__pycache__
+*checkpoints/

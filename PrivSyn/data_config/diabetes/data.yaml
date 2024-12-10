@@ -1,0 +1,47 @@
+---
+identifier_list: []
+
+binning_list:
+  "Pregnancies":
+    - 0
+    - 17
+    - 1
+  "Glucose":
+    - 0
+    - 199
+    - 10
+  "BloodPressure":
+    - 0
+    - 122
+    - 8
+  "SkinThickness":
+    - 0
+    - 99
+    - 1
+  "Insulin":
+    - 0
+    - 846
+    - 40
+  "BMI":
+    - 0.0
+    - 67.1
+    - 2
+  "DiabetesPedigreeFunction":
+    - 78
+    - 2420
+    - 120
+  "Age":
+    - 21
+    - 81
+    - 1
+  "Outcome":
+    - 0
+    - 1
+    - 1
+  "ID":
+    - 0
+    - 767
+    - 1
+# grouping_list:
+
+# determined_list:

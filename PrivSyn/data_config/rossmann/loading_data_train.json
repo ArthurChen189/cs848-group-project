@@ -1,0 +1,55 @@
+{
+  "schema": {
+    "Store": {
+      "dtype": "uint16",
+      "kind": "numeric",
+      "min": 1,
+      "max": 1115,
+      "bins": 1
+    },
+    "DayOfWeek": {
+      "dtype": "uint8",
+      "kind": "numeric",
+      "min": 1,
+      "max": 7,
+      "bins": 1
+    },
+    "Sales": {
+      "dtype": "uint64",
+      "kind": "numeric",
+      "min": 0,
+      "max": 41200,
+      "bins": 100
+    },
+    "Customers": {
+      "dtype": "uint32",
+      "min": 0,
+      "max": 4800,
+      "bins": 10
+    },
+    "Open": {
+      "dtype": "uint8",
+      "kind": "categorical",
+      "values": [0, 1],
+      "codes": [0, 1]
+    },
+    "Promo": {
+      "dtype": "uint8",
+      "kind": "categorical",
+      "values": [0, 1],
+      "codes": [0, 1]
+    },
+    "StateHoliday": {
+      "dtype": "str",
+      "kind": "categorical",
+      "values": ["0", "a", "b", "c"],
+      "codes": [0, 1, 2, 3]
+    },
+    "SchoolHoliday": {
+      "dtype": "uint8",
+      "kind": "categorical",
+      "values": [0, 1],
+      "codes": [0, 1]
+    }
+  }
+}
