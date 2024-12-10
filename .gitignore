@@ -1,7 +1,8 @@
-#rossmann-data/raw/*.csv
-PrivSyn/tabddpm/
+DP_STOA/PrivSyn/tabddpm/
 datasets/
 rossmann-data/*
+PrivSyn/tabddpm/
 synthesized/*
 **/__pycache__
 *checkpoints/
+GReaT/experiments/samples

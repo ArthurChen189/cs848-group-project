@@ -6,11 +6,12 @@ from realtabformer import REaLTabFormer
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--parent-df", type=str, help="Path to the parent table")
-    parser.add_argument("--child-df", type=str, help="Path to the child table", required=True)
-    parser.add_argument("--join-on", type=str, help="Column to join on")
-    parser.add_argument("--output-dir", type=str, default="./rtf_checkpoints", help="Directory to save the models")
-    parser.add_argument("--batch-size", type=int, default=16, help="Batch size")
+    parser.add_argument("--parent_df", type=str, help="Path to the parent table")
+    parser.add_argument("--child_df", type=str, help="Path to the child table", required=True)
+    parser.add_argument("--join_on", type=str, help="Column to join on")
+    parser.add_argument("--output_dir", type=str, default="rtf_checkpoints", help="Directory to save the models")
+    parser.add_argument("--batch_size", type=int, default=16, help="Batch size")
+    parser.add_argument("--use_dp", type=int, default=0, help="Whether to enable dp, 0 means disabled")
     return parser.parse_args()
 
 def main(args):
