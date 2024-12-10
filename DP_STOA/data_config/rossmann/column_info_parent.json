@@ -1,0 +1,26 @@
+{
+  "dtype": {
+    "Store": "uint16",
+    "StoreType": "str",
+    "Assortment": "str",
+    "CompetitionDistance": "float64",
+    "CompetitionOpenSinceMonth": "float64",
+    "CompetitionOpenSinceYear": "float64",
+    "Promo2": "uint8",
+    "Promo2SinceWeek": "float64",
+    "Promo2SinceYear": "float64",
+    "PromoInterval": "str"
+  },
+  "fillna": {
+    "Store": 0,
+    "StoreType": "",
+    "Assortment": "",
+    "CompetitionDistance": 0,
+    "CompetitionOpenSinceMonth": 0,
+    "CompetitionOpenSinceYear": 0,
+    "Promo2": 0,
+    "Promo2SinceWeek": 0,
+    "Promo2SinceYear": 0,
+    "PromoInterval": ""
+  }
+}
