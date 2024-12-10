@@ -5,3 +5,4 @@ PrivSyn/tabddpm/
 synthesized/*
 **/__pycache__
 *checkpoints/
+GReaT/experiments/samples
