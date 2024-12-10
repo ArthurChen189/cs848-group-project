@@ -1,0 +1,22 @@
+{
+  "dtype": {
+    "Store": "uint16",
+    "DayOfWeek": "uint8",
+    "Sales": "uint32",
+    "Customers": "uint16",
+    "Open": "uint8",
+    "Promo": "uint8",
+    "StateHoliday": "str",
+    "SchoolHoliday": "uint8"
+  },
+  "fillna": {
+    "Store": 0,
+    "DayOfWeek": 0,
+    "Sales": 0,
+    "Customers": 0,
+    "Open": 0,
+    "Promo": 0,
+    "StateHoliday": "",
+    "SchoolHoliday": 0
+  }
+}

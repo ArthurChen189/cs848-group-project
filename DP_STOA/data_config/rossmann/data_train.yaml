@@ -1,0 +1,36 @@
+---
+identifier_list:
+  - "Date"
+
+binning_list:
+  "Store":
+    - 1
+    - 1115
+    - 1
+  "DayOfWeek":
+    - 1
+    - 7
+    - 1
+  "Sales":
+    - 0
+    - 41000
+    - 100
+  "Customers":
+    - 0
+    - 4800
+    - 10
+  "Open":
+    - 0
+    - 1
+    - 1
+  "Promo":
+    - 0
+    - 1
+    - 1
+  "SchoolHoliday":
+    - 0
+    - 1
+    - 1
+# grouping_list:
+
+# determined_list:

@@ -1,8 +1,9 @@
-import evaluation.eval_utils as emf
+import eval_utils as emf
 import pandas as pd
 from pathlib import Path
 from glob import glob
 import argparse
+
 SYNTHETIC_TRAIN_PATH = Path('./synthesized')
 ORIGINAL_DATA_PATH = Path('./datasets/preprocessed')
 NON_RELATIONAL_DATASETS = ['adult', 'california_housing', 'diabetes']
@@ -38,52 +39,51 @@ def replace_special_characters(synthetic_train_dfs: dict, private_test_dfs: dict
 
 
 def main(args):
-     for epsilon in EPSILON_VALUES:
-        print(f"\n=== Evaluating epsilon={epsilon} ===")
+    # for epsilon in EPSILON_VALUES:
+    #     print(f"\n=== Evaluating epsilon={epsilon} ===")
 
-        synthetic_train_paths = []
-        for dataset in NON_RELATIONAL_DATASETS:
-            files = list(glob(str(SYNTHETIC_TRAIN_PATH / args.model / dataset / f'train_e{epsilon}.csv')))
-            if not files:
-                raise FileNotFoundError(f"No synthetic data found for ./{args.model}/{dataset}")
-            synthetic_train_paths.append(files[0])
+    #     synthetic_train_paths = []
+    #     for dataset in NON_RELATIONAL_DATASETS:
+    #         files = list(glob(str(SYNTHETIC_TRAIN_PATH / args.model / dataset / f'train_e{epsilon}.csv')))
+    #         if not files:
+    #             raise FileNotFoundError(f"No synthetic data found for ./{args.model}/{dataset}")
+    #         synthetic_train_paths.append(files[0])
     
-        print(f"Using synthetic training data from {synthetic_train_paths}\n")
-        synthetic_train_dfs = {dataset: pd.read_csv(path) for dataset, path in zip(NON_RELATIONAL_DATASETS, synthetic_train_paths)}
+    #     print(f"Using synthetic training data from {synthetic_train_paths}\n")
+    #     synthetic_train_dfs = {dataset: pd.read_csv(path) for dataset, path in zip(NON_RELATIONAL_DATASETS, synthetic_train_paths)}
 
-        private_test_paths = [ORIGINAL_DATA_PATH / dataset / f'{dataset}_test.csv' for dataset in NON_RELATIONAL_DATASETS]
-        private_test_dfs = {dataset: pd.read_csv(path) for dataset, path in zip(NON_RELATIONAL_DATASETS, private_test_paths)}
+    #     private_test_paths = [ORIGINAL_DATA_PATH / dataset / f'{dataset}_test.csv' for dataset in NON_RELATIONAL_DATASETS]
+    #     private_test_dfs = {dataset: pd.read_csv(path) for dataset, path in zip(NON_RELATIONAL_DATASETS, private_test_paths)}
 
-        for dataset in NON_RELATIONAL_DATASETS:
-            print(f"Length of synthetic train data: {len(synthetic_train_dfs[dataset])}")
-            print(f"Length of private test data: {len(private_test_dfs[dataset])}")
+    #     for dataset in NON_RELATIONAL_DATASETS:
+    #         print(f"Length of synthetic train data: {len(synthetic_train_dfs[dataset])}")
+    #         print(f"Length of private test data: {len(private_test_dfs[dataset])}")
 
-        replace_special_characters(synthetic_train_dfs, private_test_dfs)
+    #     replace_special_characters(synthetic_train_dfs, private_test_dfs)
 
-        print(f"\nEvaluating adult")
-        emf.evaluate_mle(synthetic_train_dfs['adult'], private_test_dfs['adult'], 
-                                    target_cols_categorical=ADULT_TARGET_COLUMN, 
-                                    categorical_cols=ADULT_CATEGORICAL_COLUMNS)
+    #     print(f"\nEvaluating adult")
+    #     emf.evaluate_mle(synthetic_train_dfs['adult'], private_test_dfs['adult'], 
+    #                                 target_cols_categorical=ADULT_TARGET_COLUMN, 
+    #                                 categorical_cols=ADULT_CATEGORICAL_COLUMNS)
 
-        print(f"Evaluating diabetes")
-        emf.evaluate_mle(synthetic_train_dfs['diabetes'], private_test_dfs['diabetes'], 
-                                    target_cols_categorical=DIABETES_TARGET_COLUMN)
+    #     print(f"Evaluating diabetes")
+    #     emf.evaluate_mle(synthetic_train_dfs['diabetes'], private_test_dfs['diabetes'], 
+    #                                 target_cols_categorical=DIABETES_TARGET_COLUMN)
 
-        print(f"Evaluating california housing")
-        emf.evaluate_mle(synthetic_train_dfs['california_housing'], private_test_dfs['california_housing'], 
-                                    target_cols_numerical=CALIFORNIA_HOUSING_TARGET_COLUMN, 
-                                    categorical_cols=CALIFORNIA_HOUSING_CATEGORICAL_COLUMNS);
+    #     print(f"Evaluating california housing")
+    #     emf.evaluate_mle(synthetic_train_dfs['california_housing'], private_test_dfs['california_housing'], 
+    #                                 target_cols_numerical=CALIFORNIA_HOUSING_TARGET_COLUMN, 
+    #                                 categorical_cols=CALIFORNIA_HOUSING_CATEGORICAL_COLUMNS);
 
-        print(f"\nEvaluating dm score")
-        print(f"Evaluating adult")
-        emf.calculate_dm_score(private_test_dfs['adult'], synthetic_train_dfs['adult'], categorical_cols=ADULT_CATEGORICAL_COLUMNS)
+    #     print(f"\nEvaluating dm score")
+    #     print(f"Evaluating adult")
+    #     emf.calculate_dm_score(private_test_dfs['adult'], synthetic_train_dfs['adult'], categorical_cols=ADULT_CATEGORICAL_COLUMNS)
 
-        print(f"Evaluating diabetes")
-        emf.calculate_dm_score(private_test_dfs['diabetes'], synthetic_train_dfs['diabetes'])
+    #     print(f"Evaluating diabetes")
+    #     emf.calculate_dm_score(private_test_dfs['diabetes'], synthetic_train_dfs['diabetes'])
 
-        print(f"Evaluating california housing")
-        emf.calculate_dm_score(private_test_dfs['california_housing'], synthetic_train_dfs['california_housing'], categorical_cols=CALIFORNIA_HOUSING_CATEGORICAL_COLUMNS)
-
+    #     print(f"Evaluating california housing")
+    #     emf.calculate_dm_score(private_test_dfs['california_housing'], synthetic_train_dfs['california_housing'], categorical_cols=CALIFORNIA_HOUSING_CATEGORICAL_COLUMNS)
 
     # rossmann
     rossmann_synthetic_child_train_path = glob(str(SYNTHETIC_TRAIN_PATH / args.model / 'rossmann' / f'child_samples_num_samples=*.csv'))[0]

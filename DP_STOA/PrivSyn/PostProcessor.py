@@ -55,14 +55,34 @@ class RecordPostprocessor:
         return data
 
     def decode_remaining(self, config, data):
-        #grouping_attr = [info["grouped_name"] for info in self.config['grouping_list'] if info is not None]
-        decoded_attributes = list(config['binning_list'].keys()) # + [grouping['grouped_name'] for grouping in config['grouping_list'] if grouping is not None]
+        decoded_attributes = list(config['binning_list'].keys())
         for attr, mapping in self.decode_mapping.items():
             if attr in decoded_attributes:
                 continue
-            else:
-                mapping = pd.Index(mapping)
-                data[attr] = mapping[data[attr]]
+            try:
+                # Convert mapping to a pandas Series for easier indexing
+                mapping_series = pd.Series(mapping)
+                
+                if data[attr].isna().any():
+                    # Create a copy to avoid modifying the original data
+                    mapped_data = pd.Series(index=data.index, dtype=object)
+                    # Map non-NaN values
+                    non_nan_mask = ~data[attr].isna()
+                    mapped_data[non_nan_mask] = mapping_series.iloc[data[attr][non_nan_mask].astype(int)].values
+                    # Fill NaN values
+                    mapped_data[~non_nan_mask] = self.fillna[attr]
+                    data[attr] = mapped_data
+                else:
+                    # If no NaN values, proceed with simple mapping
+                    data[attr] = mapping_series.iloc[data[attr].astype(int)].values
+                    
+            except Exception as e:
+                print(f"\nError decoding column '{attr}':")
+                print(f"Mapping values: {mapping[:5]}...")
+                print(f"Data values: {data[attr].value_counts().head()}")
+                print(f"Data dtype: {data[attr].dtype}")
+                print(f"Fill NA value: {self.fillna[attr]}")
+                raise Exception(f"Error decoding column '{attr}': {str(e)}")
         return data
 
     def ensure_types(self, datatypes, data):

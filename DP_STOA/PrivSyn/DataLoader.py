@@ -150,11 +150,16 @@ class DataLoader():
 
     def binning_attributes(self, binning_info, data):
         for attr, spec_list in binning_info.items():
-            [s, t, step] = spec_list
-            bins = np.r_[-np.inf, np.arange(s, t, step), np.inf]
-            data[attr] = pd.cut(data[attr], bins).cat.codes
-            self.encode_mapping[attr] = {(bins[i], bins[i + 1]): i for i in range(len(bins) - 1)}
-            self.decode_mapping[attr] = [i for i in range(len(bins) - 1)]
+            try:
+                [s, t, step] = spec_list
+                bins = np.r_[-np.inf, np.arange(s, t, step), np.inf]
+                data[attr] = pd.cut(data[attr], bins).cat.codes
+                self.encode_mapping[attr] = {(bins[i], bins[i + 1]): i for i in range(len(bins) - 1)}
+                self.decode_mapping[attr] = [i for i in range(len(bins) - 1)]
+            except TypeError as e:
+                print(f"Error processing column '{attr}': Current dtype is {data[attr].dtype}")
+                print(f"First few values of {attr}: {data[attr].head()}")
+                raise TypeError(f"Error binning column '{attr}': {str(e)}")
         return data
 
     def remove_identifier(self,identifier_list, data):

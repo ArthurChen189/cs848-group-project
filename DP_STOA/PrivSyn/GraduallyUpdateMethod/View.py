@@ -5,7 +5,7 @@ class View:
         self.attr_one_hot = attr_one_hot
         self.domain_size_list = domain_size_list
 
-        self.domain_size = np.product(self.domain_size_list[np.nonzero(self.attr_one_hot)[0]])
+        self.domain_size = np.prod(self.domain_size_list[np.nonzero(self.attr_one_hot)[0]])
         self.total_num_attr = len(self.attr_one_hot)
         self.view_num_attr = np.count_nonzero(self.attr_one_hot)
 
@@ -147,7 +147,7 @@ class View:
 
         encode_records = np.matmul(bigger_view.tuple_key, encode_num)
 
-        self.weights[index] = bigger_view.weight_coeff / np.product(self.domain_size_list[np.setdiff1d(bigger_view.attributes_index, self.attributes_index)])
+        self.weights[index] = bigger_view.weight_coeff / np.prod(self.domain_size_list[np.setdiff1d(bigger_view.attributes_index, self.attributes_index)])
 
         for i in range(self.domain_size):
             key_index = np.where(encode_records == i)[0]

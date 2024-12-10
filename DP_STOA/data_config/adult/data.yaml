@@ -1,0 +1,25 @@
+---
+identifier_list:
+  - "fnlwgt"
+  - "education-num"
+
+binning_list:
+  "age":
+    - 17
+    - 90
+    - 1
+  "hours-per-week":
+    - 1
+    - 99
+    - 1
+  "capital-gain":
+    - 0
+    - 99999
+    - 100
+  "capital-loss":
+    - 0
+    - 4356
+    - 40
+# grouping_list:
+
+# determined_list:

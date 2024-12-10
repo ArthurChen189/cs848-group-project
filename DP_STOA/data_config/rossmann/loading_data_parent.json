@@ -1,0 +1,70 @@
+{
+  "schema": {
+    "Store": {
+      "dtype": "uint16",
+      "kind": "numeric",
+      "min": 1,
+      "max": 1115,
+      "bins": 1
+    },
+    "StoreType": {
+      "dtype": "str",
+      "kind": "categorical",
+      "values": ["a", "b", "c", "d"],
+      "codes": [0, 1, 2, 3]
+    },
+    "Assortment": {
+      "dtype": "str",
+      "kind": "categorical",
+      "values": ["a", "b", "c"],
+      "codes": [0, 1, 2]
+    },
+    "CompetitionDistance": {
+      "dtype": "float64",
+      "kind": "numeric",
+      "min": 20.0,
+      "max": 75860.0,
+      "bins": 100
+    },
+    "CompetitionOpenSinceMonth": {
+      "dtype": "float64",
+      "kind": "numeric",
+      "min": 1.0,
+      "max": 12.0,
+      "bins": 1
+    },
+    "CompetitionOpenSinceYear": {
+      "dtype": "float64",
+      "kind": "numeric",
+      "min": 1961.0,
+      "max": 2015.0,
+      "bins": 1
+    },
+    "Promo2": {
+      "dtype": "uint8",
+      "kind": "categorical",
+      "values": [0, 1],
+      "codes": [0, 1]
+    },
+    "Promo2SinceWeek": {
+      "dtype": "float64",
+      "kind": "numeric",
+      "min": 1.0,
+      "max": 52.0,
+      "bins": 1
+    },
+    "Promo2SinceYear": {
+      "dtype": "float32",
+      "kind": "numeric",
+      "min": 2009.0,
+      "max": 2015.0,
+      "bins": 1
+    },
+    "PromoInterval": {
+      "dtype": "str",
+      "kind": "categorical",
+      "values": ["Jan,Apr,Jul,Oct", "Feb,May,Aug,Nov", "Mar,Jun,Sept,Dec"],
+      "codes": [0, 1, 2]
+    }
+  }
+}
